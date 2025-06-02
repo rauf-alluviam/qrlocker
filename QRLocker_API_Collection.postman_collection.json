@@ -1,0 +1,1198 @@
+{
+  "info": {
+    "name": "QRLocker API Collection",
+    "description": "Complete API collection for QRLocker application with document management, QR code generation, and analytics",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organization_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "department_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "qr_bundle_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "qr_uuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "request_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.token) {",
+                  "        pm.collectionVariables.set('auth_token', responseJson.token);",
+                  "    }",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('user_id', responseJson.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"user\",\n  \"organizationId\": \"{{organization_id}}\",\n  \"departmentId\": \"{{department_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.token) {",
+                  "        pm.collectionVariables.set('auth_token', responseJson.token);",
+                  "    }",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('user_id', responseJson.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/login",
+              "host": ["{{base_url}}"],
+              "path": ["users", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["users", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["users", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two-Factor Authentication",
+      "item": [
+        {
+          "name": "Setup 2FA",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/2fa/setup",
+              "host": ["{{base_url}}"],
+              "path": ["users", "2fa", "setup"]
+            }
+          }
+        },
+        {
+          "name": "Verify 2FA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/2fa/verify",
+              "host": ["{{base_url}}"],
+              "path": ["users", "2fa", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Disable 2FA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"password123\",\n  \"token\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/2fa/disable",
+              "host": ["{{base_url}}"],
+              "path": ["users", "2fa", "disable"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Management (Admin)",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"role\": \"supervisor\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "item": [
+        {
+          "name": "Create Organization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('organization_id', responseJson.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corporation\",\n  \"type\": \"private\",\n  \"address\": \"123 Business St, City, State\",\n  \"contactEmail\": \"contact@acme.com\",\n  \"contactPhone\": \"+1-555-0123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations",
+              "host": ["{{base_url}}"],
+              "path": ["organizations"]
+            }
+          }
+        },
+        {
+          "name": "Get All Organizations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations",
+              "host": ["{{base_url}}"],
+              "path": ["organizations"]
+            }
+          }
+        },
+        {
+          "name": "Get Organization by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Organization",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corporation Updated\",\n  \"type\": \"public\",\n  \"address\": \"456 New Address St, City, State\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Organization",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "Create Department",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('department_id', responseJson.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"IT Department\",\n  \"description\": \"Information Technology Department\",\n  \"head\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}/departments",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}/departments",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Get Department by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}/departments/{{department_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}", "departments", "{{department_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Information Technology Department\",\n  \"description\": \"Updated IT Department Description\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}/departments/{{department_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}", "departments", "{{department_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}/departments/{{department_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}", "departments", "{{department_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "Upload Documents",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.length > 0 && responseJson[0].id) {",
+                  "        pm.collectionVariables.set('document_id', responseJson[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "documents",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "title",
+                  "value": "Sample Document",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "This is a sample document for testing",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "general",
+                  "type": "text"
+                },
+                {
+                  "key": "tags",
+                  "value": "sample,test,document",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/documents/upload",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Get All Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents",
+              "host": ["{{base_url}}"],
+              "path": ["documents"]
+            }
+          }
+        },
+        {
+          "name": "Get My Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents/me",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "me"]
+            }
+          }
+        },
+        {
+          "name": "Get Documents by Department",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents/department/{{department_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "department", "{{department_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Document by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "{{document_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Document Signed URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents/{{document_id}}/url",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "{{document_id}}", "url"]
+            }
+          }
+        },
+        {
+          "name": "Update Document",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Document Title\",\n  \"description\": \"Updated document description\",\n  \"category\": \"updated\",\n  \"tags\": [\"updated\", \"test\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "{{document_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Optimize Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quality\": 80,\n  \"width\": 1920,\n  \"height\": 1080\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/documents/{{document_id}}/optimize",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "{{document_id}}", "optimize"]
+            }
+          }
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["documents", "{{document_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QR Codes",
+      "item": [
+        {
+          "name": "Create QR Bundle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('qr_bundle_id', responseJson.id);",
+                  "    }",
+                  "    if (responseJson.uuid) {",
+                  "        pm.collectionVariables.set('qr_uuid', responseJson.uuid);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sample QR Bundle\",\n  \"description\": \"This is a sample QR bundle for testing\",\n  \"documentIds\": [\"{{document_id}}\"],\n  \"expiresAt\": \"2025-12-31T23:59:59.000Z\",\n  \"maxScans\": 100,\n  \"requirePasscode\": true,\n  \"allowedDomains\": [\"example.com\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/qr",
+              "host": ["{{base_url}}"],
+              "path": ["qr"]
+            }
+          }
+        },
+        {
+          "name": "Get All QR Bundles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/qr",
+              "host": ["{{base_url}}"],
+              "path": ["qr"]
+            }
+          }
+        },
+        {
+          "name": "Get My QR Bundles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/qr/me",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "me"]
+            }
+          }
+        },
+        {
+          "name": "Get Department QR Bundles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/qr/department/{{department_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "department", "{{department_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get QR Bundle by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/qr/{{qr_bundle_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "{{qr_bundle_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get QR Bundle by UUID (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/qr/view/{{qr_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "view", "{{qr_uuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Verify Passcode (Public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/qr/verify-passcode/{{qr_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "verify-passcode", "{{qr_uuid}}"]
+            }
+          }
+        },
+        {
+          "name": "Update QR Bundle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated QR Bundle\",\n  \"description\": \"Updated description\",\n  \"maxScans\": 200\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/qr/{{qr_bundle_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "{{qr_bundle_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Regenerate Passcode",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/qr/{{qr_bundle_id}}/regenerate-passcode",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "{{qr_bundle_id}}", "regenerate-passcode"]
+            }
+          }
+        },
+        {
+          "name": "Send Passcode by Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"recipient@example.com\",\n  \"message\": \"Here is your passcode for accessing the documents\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/qr/{{qr_bundle_id}}/send-passcode",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "{{qr_bundle_id}}", "send-passcode"]
+            }
+          }
+        },
+        {
+          "name": "Approve QR Bundle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvalNotes\": \"Approved for public access\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/qr/{{qr_bundle_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "{{qr_bundle_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject QR Bundle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejectionReason\": \"Documents need to be updated before approval\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/qr/{{qr_bundle_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "{{qr_bundle_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Delete QR Bundle",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/qr/{{qr_bundle_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["qr", "{{qr_bundle_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Document Requests",
+      "item": [
+        {
+          "name": "Create Document Request (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('request_id', responseJson.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requesterName\": \"John Smith\",\n  \"requesterEmail\": \"john.smith@example.com\",\n  \"requesterPhone\": \"+1-555-0123\",\n  \"organizationName\": \"External Company\",\n  \"documentType\": \"Contract\",\n  \"description\": \"I need access to the contract documents for project XYZ\",\n  \"urgency\": \"medium\",\n  \"expectedDate\": \"2025-06-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/requests",
+              "host": ["{{base_url}}"],
+              "path": ["requests"]
+            }
+          }
+        },
+        {
+          "name": "Get All Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/requests",
+              "host": ["{{base_url}}"],
+              "path": ["requests"]
+            }
+          }
+        },
+        {
+          "name": "Get My Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/requests/me",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "me"]
+            }
+          }
+        },
+        {
+          "name": "Get Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Request Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"notes\": \"Request has been reviewed and approved\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Assign Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignedTo\": \"{{user_id}}\",\n  \"notes\": \"Assigned to handle this request\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}/assign",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}", "assign"]
+            }
+          }
+        },
+        {
+          "name": "Respond to Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Thank you for your request. We have processed it and the documents are now available.\",\n  \"attachments\": [\"{{document_id}}\"],\n  \"qrBundleId\": \"{{qr_bundle_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}/respond",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}", "respond"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get QR Scan Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/scans?period=week",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "scans"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "week"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Document View Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/views?period=month",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "views"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Top QR Bundles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/top-qr?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "top-qr"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Top Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/top-documents?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "top-documents"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Scans by Time of Day",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/time-of-day?period=week",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "time-of-day"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "week"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Scans by Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/location?period=month",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "location"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/user/{{user_id}}?period=month",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "user", "{{user_id}}"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Department Activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/department/{{department_id}}?period=month",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "department", "{{department_id}}"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
