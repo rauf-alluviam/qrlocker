@@ -17,6 +17,7 @@ import api from '../../services/api';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import PasscodeEntry from './PasscodeEntry';
+import DocumentPreviewModal from '../../components/Documents/DocumentPreviewModal';
 
 const QRScanView = () => {
   const { uuid } = useParams();
@@ -25,6 +26,8 @@ const QRScanView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [requiresPasscode, setRequiresPasscode] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   useEffect(() => {
     if (uuid) {
@@ -106,9 +109,9 @@ const QRScanView = () => {
 
   const handleViewDocument = async (document) => {
     try {
-      // Get signed URL for viewing the document
-      const response = await api.get(`/documents/${document._id}/url`);
-      window.open(response.data.signedUrl, '_blank');
+      // Open the document in the preview modal
+      setSelectedDocument(document);
+      setShowPreviewModal(true);
     } catch (error) {
       console.error('Error viewing document:', error);
       toast.error('Failed to view document');
@@ -415,6 +418,16 @@ const QRScanView = () => {
           </div>
         </div>
       </div>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        document={selectedDocument}
+        isOpen={showPreviewModal}
+        onClose={() => {
+          setShowPreviewModal(false);
+          setSelectedDocument(null);
+        }}
+      />
     </div>
   );
 };
