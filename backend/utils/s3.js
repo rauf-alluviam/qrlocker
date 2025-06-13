@@ -22,7 +22,7 @@ const s3Client = new S3Client({
 const s3Storage = multerS3({
   s3: s3Client,
   bucket: process.env.AWS_S3_BUCKET_NAME || process.env.AWS_BUCKET_NAME,
-  acl: 'private',
+  acl: 'public-read', // Make files publicly accessible
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
     try {
@@ -84,7 +84,21 @@ const upload = multer({
   },
 });
 
-// Function to get a signed URL for a file in S3
+// Function to get a direct S3 URL for a file (no expiration)
+const getDirectS3Url = (key) => {
+  const bucketName = process.env.AWS_S3_BUCKET_NAME || process.env.AWS_BUCKET_NAME;
+  const region = process.env.AWS_REGION;
+  
+  // Use CloudFront distribution URL if available, otherwise direct S3 URL
+  if (process.env.CLOUDFRONT_DOMAIN) {
+    return `https://${process.env.CLOUDFRONT_DOMAIN}/${key}`;
+  }
+  
+  // Direct S3 URL
+  return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+};
+
+// Function to get a signed URL for a file in S3 (deprecated - use getDirectS3Url instead)
 const getSignedUrl = async (key, expires = 3600) => {
   try {
     const command = new GetObjectCommand({
@@ -126,7 +140,7 @@ const uploadFile = async (buffer, key, contentType) => {
         Key: key,
         Body: buffer,
         ContentType: contentType,
-        ACL: 'private'
+        ACL: 'public-read' // Make uploaded files publicly accessible
       }
     });
 
@@ -141,7 +155,8 @@ const uploadFile = async (buffer, key, contentType) => {
 module.exports = {
   s3Client,
   upload,
-  getSignedUrl,
+  getSignedUrl, // Deprecated - kept for backward compatibility
+  getDirectS3Url, // New function for direct S3 URLs
   deleteFile,
   generateUniqueFileName,
   uploadFile

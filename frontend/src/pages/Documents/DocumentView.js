@@ -20,10 +20,17 @@ const DocumentView = () => {
   const { user } = useAuthStore();
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [documentUrl, setDocumentUrl] = useState(null);
 
   useEffect(() => {
     fetchDocument();
   }, [id]);
+
+  useEffect(() => {
+    if (document && document.fileType && document.fileType.includes('image')) {
+      fetchDocumentUrl();
+    }
+  }, [document]);
 
   const fetchDocument = async () => {
     try {
@@ -36,6 +43,15 @@ const DocumentView = () => {
       navigate('/documents');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDocumentUrl = async () => {
+    try {
+      const response = await api.get(`/documents/${id}/url`);
+      setDocumentUrl(response.data.signedUrl || response.data.url);
+    } catch (error) {
+      console.error('Error fetching document URL:', error);
     }
   };
 
@@ -210,12 +226,12 @@ const DocumentView = () => {
           </div>
 
           {/* Preview if it's an image */}
-          {document.fileType && document.fileType.includes('image') && document.s3Url && (
+          {document.fileType && document.fileType.includes('image') && documentUrl && (
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Preview</h2>
               <div className="mt-2 flex justify-center border border-gray-200 rounded-lg overflow-hidden">
                 <img
-                  src={document.s3Url}
+                  src={documentUrl}
                   alt={document.originalName}
                   className="max-w-full max-h-96 object-contain"
                 />

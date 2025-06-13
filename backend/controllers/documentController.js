@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const Document = require('../models/documentModel');
-const { getSignedUrl, deleteFile, getObject, uploadObject } = require('../utils/s3');
+const { getSignedUrl, deleteFile, getObject, uploadObject, getDirectS3Url } = require('../utils/s3');
 const { generateAndUploadQR } = require('../utils/qrCodeGenerator');
 const QRBundle = require('../models/qrBundleModel');
 
@@ -478,7 +478,7 @@ const getDocumentById = asyncHandler(async (req, res) => {
   res.json(document);
 });
 
-// @desc    Get signed URL for document
+// @desc    Get direct S3 URL for document
 // @route   GET /api/documents/:id/url
 // @access  Private
 const getDocumentSignedUrl = asyncHandler(async (req, res) => {
@@ -501,7 +501,8 @@ const getDocumentSignedUrl = asyncHandler(async (req, res) => {
     throw new Error('Not authorized to access this document');
   }
 
-  const url = await getSignedUrl(document.s3Key);
+  // Use direct S3 URL instead of signed URL
+  const url = getDirectS3Url(document.s3Key);
   res.json({ url });
 });
 
@@ -670,8 +671,8 @@ const downloadDocument = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Generate signed URL for download
-    const downloadUrl = await getSignedUrl(document.s3Key, 3600); // 1 hour expiry
+    // Generate direct S3 URL for download (no expiration)
+    const downloadUrl = getDirectS3Url(document.s3Key);
     
     res.json({ 
       downloadUrl,
