@@ -102,6 +102,21 @@ const QRBundleView = () => {
     });
   };
 
+  const handleDownloadDocument = (document) => {
+    if (!document) {
+      toast.error('Document data not available');
+      return;
+    }
+    
+    if (document.s3Url) {
+      // Direct access to S3 URL since bucket is public
+      window.open(document.s3Url, '_blank');
+    } else {
+      toast.error('Download URL not available for this document');
+      console.error('No s3Url found for document:', document._id);
+    }
+  };
+
   const getStatusBadge = () => {
     if (!bundle) return null;
     
@@ -416,12 +431,22 @@ const QRBundleView = () => {
                               </p>
                             </div>
                           </div>
-                          <Link
-                            to={`/documents/${document._id}`}
-                            className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded"
-                          >
-                            <EyeIcon className="h-4 w-4" />
-                          </Link>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleDownloadDocument(document)}
+                              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                              title="Download document"
+                            >
+                              <DocumentArrowDownIcon className="h-4 w-4" />
+                            </button>
+                            <Link
+                              to={`/documents/${document._id}`}
+                              className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded"
+                              title="View document details"
+                            >
+                              <EyeIcon className="h-4 w-4" />
+                            </Link>
+                          </div>
                         </div>
                       ))}
                     </div>

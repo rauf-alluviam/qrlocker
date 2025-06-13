@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const Document = require('../models/documentModel');
-const { getSignedUrl, deleteFile, getObject, uploadObject } = require('../utils/s3');
+const { getDirectS3Url, deleteFile, getObject, uploadObject } = require('../utils/s3');
 const { generateAndUploadQR } = require('../utils/qrCodeGenerator');
 const QRBundle = require('../models/qrBundleModel');
 
@@ -250,7 +250,12 @@ const getAllDocuments = asyncHandler(async (req, res) => {
         groupId: group._id,
         count: group.count,
         totalSize: group.totalSize,
-        documents: group.documents.slice(0, 5) // Limit documents per group for performance
+        documents: group.documents.slice(0, 5).map(doc => {
+          // Add direct S3 URL to each document in the group
+          const docObj = typeof doc.toObject === 'function' ? doc.toObject() : doc;
+          docObj.s3Url = getDirectS3Url(doc.s3Key);
+          return docObj;
+        })
       })),
       page,
       pages: Math.ceil(totalGroups / pageSize),
@@ -270,9 +275,16 @@ const getAllDocuments = asyncHandler(async (req, res) => {
       .limit(pageSize)
       .skip(pageSize * (page - 1));
 
+    // Add direct S3 URLs to documents
+    const documentsWithUrls = documents.map(doc => {
+      const docObj = doc.toObject();
+      docObj.s3Url = getDirectS3Url(doc.s3Key);
+      return docObj;
+    });
+
     res.json({
       grouped: false,
-      documents,
+      documents: documentsWithUrls,
       page,
       pages: Math.ceil(count / pageSize),
       total: count,
@@ -420,7 +432,12 @@ const getMyDocuments = asyncHandler(async (req, res) => {
         groupId: group._id,
         count: group.count,
         totalSize: group.totalSize,
-        documents: group.documents.slice(0, 5)
+        documents: group.documents.slice(0, 5).map(doc => {
+          // Add direct S3 URL to each document in the group
+          const docObj = typeof doc.toObject === 'function' ? doc.toObject() : doc;
+          docObj.s3Url = getDirectS3Url(doc.s3Key);
+          return docObj;
+        })
       })),
       page,
       pages: Math.ceil(totalGroups / pageSize),
@@ -439,9 +456,16 @@ const getMyDocuments = asyncHandler(async (req, res) => {
       .limit(pageSize)
       .skip(pageSize * (page - 1));
 
+    // Add direct S3 URLs to documents
+    const documentsWithUrls = documents.map(doc => {
+      const docObj = doc.toObject();
+      docObj.s3Url = getDirectS3Url(doc.s3Key);
+      return docObj;
+    });
+
     res.json({
       grouped: false,
-      documents,
+      documents: documentsWithUrls,
       page,
       pages: Math.ceil(count / pageSize),
       total: count,
@@ -475,10 +499,14 @@ const getDocumentById = asyncHandler(async (req, res) => {
     throw new Error('Not authorized to access this document');
   }
 
-  res.json(document);
+  // Add direct S3 URL to the response
+  const documentObj = document.toObject();
+  documentObj.s3Url = getDirectS3Url(document.s3Key);
+  
+  res.json(documentObj);
 });
 
-// @desc    Get signed URL for document
+// @desc    Get direct S3 URL for document
 // @route   GET /api/documents/:id/url
 // @access  Private
 const getDocumentSignedUrl = asyncHandler(async (req, res) => {
@@ -501,8 +529,15 @@ const getDocumentSignedUrl = asyncHandler(async (req, res) => {
     throw new Error('Not authorized to access this document');
   }
 
-  const url = await getSignedUrl(document.s3Key);
-  res.json({ url });
+  // Generate direct S3 URL for preview/access (no expiration)
+  const url = getDirectS3Url(document.s3Key);
+  res.json({ 
+    url,
+    signedUrl: url, // For backward compatibility
+    fileName: document.originalName,
+    fileSize: document.fileSize,
+    fileType: document.fileType
+  });
 });
 
 // @desc    Update document
@@ -670,8 +705,8 @@ const downloadDocument = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Generate signed URL for download
-    const downloadUrl = await getSignedUrl(document.s3Key, 3600); // 1 hour expiry
+    // Generate direct S3 URL for download (no expiration)
+    const downloadUrl = getDirectS3Url(document.s3Key);
     
     res.json({ 
       downloadUrl,
@@ -802,6 +837,73 @@ const shareDocument = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Download document via QR access (public)
+// @route   GET /api/documents/:id/qr-download
+// @access  Public (but requires valid QR bundle access)
+const downloadDocumentViaQR = asyncHandler(async (req, res) => {
+  const { qrUuid } = req.query; // QR bundle UUID to validate access
+  
+  if (!qrUuid) {
+    res.status(400);
+    throw new Error('QR bundle UUID is required for public document access');
+  }
+
+  const document = await Document.findById(req.params.id);
+
+  if (!document) {
+    res.status(404);
+    throw new Error('Document not found');
+  }
+
+  // Find the QR bundle and validate access
+  const QRBundle = require('../models/qrBundleModel');
+  const qrBundle = await QRBundle.findOne({ uuid: qrUuid });
+
+  if (!qrBundle) {
+    res.status(404);
+    throw new Error('QR bundle not found');
+  }
+
+  // Check if the document is included in this QR bundle
+  if (!qrBundle.documents.includes(document._id)) {
+    res.status(403);
+    throw new Error('Document is not accessible through this QR bundle');
+  }
+
+  // Check if QR bundle is accessible (not expired, within view limits, etc.)
+  if (!qrBundle.isAccessible()) {
+    res.status(403);
+    throw new Error('QR bundle is not currently accessible');
+  }
+
+  try {
+    // Generate direct S3 URL for download (no expiration)
+    const downloadUrl = getDirectS3Url(document.s3Key);
+    
+    // Log the download for analytics
+    const ScanLog = require('../models/scanLogModel');
+    await ScanLog.create({
+      qrBundle: qrBundle._id,
+      documentId: document._id,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+      action: 'download',
+      success: true,
+    });
+    
+    res.json({ 
+      downloadUrl,
+      fileName: document.originalName,
+      fileSize: document.fileSize,
+      fileType: document.fileType
+    });
+  } catch (error) {
+    console.error('Error generating download URL:', error);
+    res.status(500);
+    throw new Error('Failed to generate download URL');
+  }
+});
+
 module.exports = {
   uploadDocuments,
   getAllDocuments,
@@ -814,4 +916,5 @@ module.exports = {
   getDocumentSignedUrl,
   downloadDocument,
   shareDocument,
+  downloadDocumentViaQR,
 };

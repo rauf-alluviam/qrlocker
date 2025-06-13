@@ -451,12 +451,19 @@ const getQRBundleByUuid = asyncHandler(async (req, res) => {
     _id: { $in: qrBundle.documents },
   }).select('originalName fileType s3Key description tags');
 
+  // Add direct S3 URLs to documents
+  const documentsWithUrls = documents.map(doc => {
+    const docObj = doc.toObject();
+    docObj.s3Url = require('../utils/s3').getDirectS3Url(doc.s3Key);
+    return docObj;
+  });
+
   res.json({
     _id: qrBundle._id,
     title: qrBundle.title,
     description: qrBundle.description,
     uuid: qrBundle.uuid,
-    documents,
+    documents: documentsWithUrls,
     accessControl: {
       isPublic: qrBundle.accessControl.isPublic,
       hasPasscode: false, // Don't send passcode info
@@ -545,12 +552,19 @@ const verifyPasscode = asyncHandler(async (req, res) => {
     _id: { $in: qrBundle.documents },
   }).select('originalName fileType s3Key description tags');
 
+  // Add direct S3 URLs to documents
+  const documentsWithUrls = documents.map(doc => {
+    const docObj = doc.toObject();
+    docObj.s3Url = require('../utils/s3').getDirectS3Url(doc.s3Key);
+    return docObj;
+  });
+
   res.json({
     _id: qrBundle._id,
     title: qrBundle.title,
     description: qrBundle.description,
     uuid: qrBundle.uuid,
-    documents,
+    documents: documentsWithUrls,
     accessControl: {
       isPublic: qrBundle.accessControl.isPublic,
       hasPasscode: true,

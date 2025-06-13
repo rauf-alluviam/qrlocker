@@ -1,6 +1,5 @@
 const { S3Client, GetObjectCommand, DeleteObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
-const { getSignedUrl: getS3SignedUrl } = require('@aws-sdk/s3-request-presigner');
 const multerS3 = require('multer-s3-v3');
 const multer = require('multer');
 const path = require('path');
@@ -22,7 +21,7 @@ const s3Client = new S3Client({
 const s3Storage = multerS3({
   s3: s3Client,
   bucket: process.env.AWS_S3_BUCKET_NAME || process.env.AWS_BUCKET_NAME,
-  acl: 'private',
+  acl: 'public-read',
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
     try {
@@ -84,22 +83,6 @@ const upload = multer({
   },
 });
 
-// Function to get a signed URL for a file in S3
-const getSignedUrl = async (key, expires = 3600) => {
-  try {
-    const command = new GetObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME || process.env.AWS_BUCKET_NAME,
-      Key: key,
-    });
-    
-    const url = await getS3SignedUrl(s3Client, command, { expiresIn: expires });
-    return url;
-  } catch (error) {
-    console.error('Error generating signed URL:', error);
-    throw error;
-  }
-};
-
 // Function to delete a file from S3
 const deleteFile = async (key) => {
   try {
@@ -138,10 +121,25 @@ const uploadFile = async (buffer, key, contentType) => {
   }
 };
 
+// Function to get direct S3 URL (no expiration)
+const getDirectS3Url = (key) => {
+  try {
+    const bucketName = process.env.AWS_S3_BUCKET_NAME || process.env.AWS_BUCKET_NAME;
+    const region = process.env.AWS_REGION;
+    
+    // Construct direct S3 URL
+    const directUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+    return directUrl;
+  } catch (error) {
+    console.error('Error generating direct S3 URL:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   s3Client,
   upload,
-  getSignedUrl,
+  getDirectS3Url,
   deleteFile,
   generateUniqueFileName,
   uploadFile

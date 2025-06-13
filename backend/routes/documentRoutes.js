@@ -10,10 +10,14 @@ const {
   optimizeImage,
   getDocumentSignedUrl,
   downloadDocument,
+  downloadDocumentViaQR,
   shareDocument
 } = require('../controllers/documentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { upload } = require('../utils/s3');
+
+// Public routes (for QR access)
+router.get('/:id/qr-download', downloadDocumentViaQR);
 
 // Protected routes
 router.post(

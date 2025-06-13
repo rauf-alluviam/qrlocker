@@ -177,7 +177,33 @@ const DocumentUpload = () => {
 
     } catch (error) {
       console.error('Error uploading files:', error);
-      toast.error('You\'ve already uploaded this document');
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const { status, data } = error.response;
+        
+        if (status === 400 && data.errors) {
+          // Handle validation errors from backend
+          data.errors.forEach(errorMsg => {
+            if (errorMsg.includes('You have already uploaded this document')) {
+              toast.warning(errorMsg);
+            } else {
+              toast.error(errorMsg);
+            }
+          });
+        } else if (data.message) {
+          toast.error(data.message);
+        } else {
+          toast.error('Upload failed. Please try again.');
+        }
+      } else if (error.request) {
+        // Network error
+        toast.error('Network error. Please check your connection and try again.');
+      } else {
+        // Other error
+        toast.error('An unexpected error occurred. Please try again.');
+      }
       
       // Update file statuses to error
       setFiles(files => files.map(file => ({

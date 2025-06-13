@@ -9,28 +9,34 @@ import api from '../../services/api';
 import { toast } from 'react-toastify';
 
 const DocumentPreviewModal = ({ document, isOpen, onClose }) => {
-  const [signedUrl, setSignedUrl] = useState(null);
+  const [documentUrl, setDocumentUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (isOpen && document) {
-      fetchSignedUrl();
+      // Use direct S3 URL if available, otherwise fetch it
+      if (document.s3Url) {
+        setDocumentUrl(document.s3Url);
+        setError(null);
+      } else {
+        fetchDocumentUrl();
+      }
     }
     return () => {
-      setSignedUrl(null);
+      setDocumentUrl(null);
       setError(null);
     };
   }, [isOpen, document]);
 
-  const fetchSignedUrl = async () => {
+  const fetchDocumentUrl = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await api.get(`/documents/${document._id}/url`);
-      setSignedUrl(response.data.signedUrl || response.data.url);
+      setDocumentUrl(response.data.url);
     } catch (error) {
-      console.error('Error fetching signed URL:', error);
+      console.error('Error fetching document URL:', error);
       setError('Failed to load document preview');
       toast.error('Failed to load document preview');
     } finally {
@@ -38,13 +44,18 @@ const DocumentPreviewModal = ({ document, isOpen, onClose }) => {
     }
   };
 
-  const handleDownload = async () => {
-    try {
-      const response = await api.get(`/documents/${document._id}/download`);
-      window.open(response.data.downloadUrl, '_blank');
-    } catch (error) {
-      console.error('Error downloading document:', error);
-      toast.error('Failed to download document');
+  const handleDownload = () => {
+    if (!document) {
+      toast.error('Document data not available');
+      return;
+    }
+    
+    if (document.s3Url) {
+      // Direct access to S3 URL since bucket is public
+      window.open(document.s3Url, '_blank');
+    } else {
+      toast.error('Download URL not available for this document');
+      console.error('No s3Url found for document:', document._id);
     }
   };
 
@@ -88,7 +99,7 @@ const DocumentPreviewModal = ({ document, isOpen, onClose }) => {
       );
     }
 
-    if (!signedUrl) {
+    if (!documentUrl) {
       return (
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -103,7 +114,7 @@ const DocumentPreviewModal = ({ document, isOpen, onClose }) => {
       return (
         <div className="flex justify-center bg-gray-50 rounded-lg overflow-hidden">
           <img
-            src={signedUrl}
+            src={documentUrl}
             alt={document.originalName}
             className="max-w-full max-h-96 object-contain"
             onError={() => setError('Failed to load image preview')}
@@ -117,7 +128,7 @@ const DocumentPreviewModal = ({ document, isOpen, onClose }) => {
       return (
         <div className="bg-gray-50 rounded-lg overflow-hidden">
           <iframe
-            src={signedUrl}
+            src={documentUrl}
             title={document.originalName}
             className="w-full h-96"
             onError={() => setError('Failed to load PDF preview')}
@@ -131,7 +142,7 @@ const DocumentPreviewModal = ({ document, isOpen, onClose }) => {
       return (
         <div className="bg-gray-50 rounded-lg overflow-hidden">
           <iframe
-            src={signedUrl}
+            src={documentUrl}
             title={document.originalName}
             className="w-full h-96 border-0"
             onError={() => setError('Failed to load text preview')}

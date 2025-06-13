@@ -39,15 +39,18 @@ const DocumentView = () => {
     }
   };
 
-  const handleDownload = async () => {
-    if (!document) return;
+  const handleDownload = () => {
+    if (!document) {
+      toast.error('Document is still loading. Please wait...');
+      return;
+    }
     
-    try {
-      const response = await api.get(`/documents/${document._id}/download`);
-      window.open(response.data.downloadUrl, '_blank');
-    } catch (error) {
-      toast.error('Failed to download document');
-      console.error('Error downloading document:', error);
+    if (document.s3Url) {
+      // Direct access to S3 URL since bucket is public
+      window.open(document.s3Url, '_blank');
+    } else {
+      toast.error('Download URL not available for this document');
+      console.error('No s3Url found for document:', document._id);
     }
   };
 
@@ -179,10 +182,15 @@ const DocumentView = () => {
             </button>
             <button
               onClick={handleDownload}
-              className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+              disabled={loading || !document}
+              className={`inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white focus:outline-none ${
+                loading || !document 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-indigo-600 hover:bg-indigo-700'
+              }`}
             >
               <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-              Download
+              {loading ? 'Loading...' : 'Download'}
             </button>
             {isOwnerOrAdmin && (
               <button

@@ -1,16 +1,18 @@
-const AWS = require('aws-sdk');
+const { SESClient } = require('@aws-sdk/client-ses');
 const nodemailer = require('nodemailer');
 
-// Configure AWS SES
-const SES = new AWS.SES({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+// Configure AWS SES with SDK v3
+const sesClient = new SESClient({
   region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-  SES: SES,
+  SES: { ses: sesClient, aws: require('@aws-sdk/client-ses') },
 });
 
 // Send email with passcode

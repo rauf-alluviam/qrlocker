@@ -85,13 +85,18 @@ const DocumentsList = () => {
     }
   };
 
-  const handleDownload = async (document) => {
-    try {
-      const response = await api.get(`/documents/${document._id}/download`);
-      window.open(response.data.downloadUrl, '_blank');
-    } catch (error) {
-      toast.error('Failed to download document');
-      console.error('Error downloading document:', error);
+  const handleDownload = (document) => {
+    if (!document) {
+      toast.error('Document data not available');
+      return;
+    }
+    
+    if (document.s3Url) {
+      // Direct access to S3 URL since bucket is public
+      window.open(document.s3Url, '_blank');
+    } else {
+      toast.error('Download URL not available for this document');
+      console.error('No s3Url found for document:', document._id);
     }
   };
   
