@@ -23,7 +23,7 @@ const qrBundleSchema = mongoose.Schema(
     },
     creator: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'QRUser',
       required: true,
     },
     organization: {
@@ -96,7 +96,7 @@ const qrBundleSchema = mongoose.Schema(
       },
       approver: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'QRUser',
       },
       approvalDate: {
         type: Date,

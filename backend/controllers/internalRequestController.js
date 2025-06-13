@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const InternalRequest = require('../models/internalRequestModel');
-const User = require('../models/userModel');
+const QRUser = require('../models/userModel');
 const QRBundle = require('../models/qrBundleModel');
 const { sendInternalRequestNotification, sendInternalRequestResponseEmail } = require('../utils/emailSender');
 const { uploadFile } = require('../utils/s3');
@@ -27,7 +27,7 @@ const createInternalRequest = asyncHandler(async (req, res) => {
   }
 
   // Validate recipients are valid users
-  const recipientUsers = await User.find({ 
+  const recipientUsers = await QRUser.find({ 
     _id: { $in: recipients },
     _id: { $ne: req.user._id } // Can't send request to yourself
   }).select('_id name email');

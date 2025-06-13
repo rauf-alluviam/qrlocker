@@ -124,7 +124,7 @@ The application now has a three-tier role system:
 ## TESTING STATUS
 
 ### Backend Server ✅
-- Running on port 5001
+- Running on port 9002
 - MongoDB connected successfully
 - Socket.IO server ready for real-time updates
 

@@ -9,7 +9,7 @@ const scanLogSchema = mongoose.Schema(
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'QRUser',
     },
     timestamp: {
       type: Date,

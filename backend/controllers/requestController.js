@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const DocumentRequest = require('../models/documentRequestModel');
 const QRBundle = require('../models/qrBundleModel');
 const { sendDocumentRequestNotification, sendRequestResponseEmail } = require('../utils/emailSender');
-const User = require('../models/userModel');
+const QRUser = require('../models/userModel');
 
 // @desc    Create a document request from external user
 // @route   POST /api/requests
@@ -37,7 +37,7 @@ const createDocumentRequest = asyncHandler(async (req, res) => {
   // Notify admin(s)
   try {
     // Find admin users for this organization
-    const admins = await User.find({
+    const admins = await QRUser.find({
       organization,
       role: 'admin',
     }).select('email');
@@ -226,7 +226,7 @@ const assignRequest = asyncHandler(async (req, res) => {
   const assignedUserId = userId || req.user._id;
 
   // Verify assignee exists and is in the same organization
-  const assignee = await User.findById(assignedUserId);
+  const assignee = await QRUser.findById(assignedUserId);
   if (!assignee) {
     res.status(404);
     throw new Error('Assignee not found');

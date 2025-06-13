@@ -39,7 +39,7 @@ const documentRequestSchema = mongoose.Schema(
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'QRUser',
     },
     responseMessage: {
       type: String,

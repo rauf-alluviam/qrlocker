@@ -33,7 +33,7 @@ const documentSchema = mongoose.Schema(
     },
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'QRUser',
       required: false, // Changed to false to allow documents without a user
     },
     organization: {

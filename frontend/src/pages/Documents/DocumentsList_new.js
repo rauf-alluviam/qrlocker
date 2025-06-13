@@ -99,7 +99,7 @@ const DocumentsList = () => {
     try {
       // Create a QR bundle with this document
       const response = await api.post('/qr', {
-        title: `Shared: ${document.originalName}`,
+        title: `${document.originalName}`,
         description: `Shared document: ${document.originalName}`,
         documents: [document._id],
         isPublic: true,

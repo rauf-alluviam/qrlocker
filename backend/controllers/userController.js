@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const bcrypt = require('bcryptjs');
 const speakeasy = require('speakeasy');
-const User = require('../models/userModel');
+const QRUser = require('../models/userModel');
 const generateToken = require('../utils/generateToken');
 
 // @desc    Register a new user
@@ -11,7 +11,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, role, organization, department } = req.body;
 
   // Check if user already exists
-  const userExists = await User.findOne({ email });
+  const userExists = await QRUser.findOne({ email });
 
   if (userExists) {
     res.status(400);
@@ -19,7 +19,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // Create new user
-  const user = await User.create({
+  const user = await QRUser.create({
     name,
     email,
     password,
@@ -51,7 +51,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { email, password, token } = req.body;
 
   // Check for user email
-  const user = await User.findOne({ email });
+  const user = await QRUser.findOne({ email });
 
   if (!user) {
     res.status(401);
@@ -104,7 +104,7 @@ const loginUser = asyncHandler(async (req, res) => {
 // @route   GET /api/users/profile
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select('-password -twoFactorSecret');
+  const user = await QRUser.findById(req.user._id).select('-password -twoFactorSecret');
 
   if (user) {
     res.json(user);
@@ -118,7 +118,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await QRUser.findById(req.user._id);
 
   if (user) {
     user.name = req.body.name || user.name;
@@ -150,7 +150,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @route   POST /api/users/2fa/setup
 // @access  Private
 const setup2FA = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await QRUser.findById(req.user._id);
 
   if (!user) {
     res.status(404);
@@ -177,7 +177,7 @@ const setup2FA = asyncHandler(async (req, res) => {
 // @access  Private
 const verify2FA = asyncHandler(async (req, res) => {
   const { token } = req.body;
-  const user = await User.findById(req.user._id);
+  const user = await QRUser.findById(req.user._id);
 
   if (!user) {
     res.status(404);
@@ -211,7 +211,7 @@ const verify2FA = asyncHandler(async (req, res) => {
 // @access  Private
 const disable2FA = asyncHandler(async (req, res) => {
   const { token, password } = req.body;
-  const user = await User.findById(req.user._id);
+  const user = await QRUser.findById(req.user._id);
 
   if (!user) {
     res.status(404);
@@ -254,7 +254,7 @@ const disable2FA = asyncHandler(async (req, res) => {
 // @route   GET /api/users
 // @access  Private/Admin
 const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({})
+  const users = await QRUser.find({})
     .select('-password -twoFactorSecret')
     .populate('organization', 'name')
     .populate('department', 'name');
@@ -266,7 +266,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 // @route   GET /api/users/:id
 // @access  Private/Admin
 const getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id)
+  const user = await QRUser.findById(req.params.id)
     .select('-password -twoFactorSecret')
     .populate('organization', 'name')
     .populate('department', 'name');
@@ -283,7 +283,7 @@ const getUserById = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/:id
 // @access  Private/Admin
 const updateUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await QRUser.findById(req.params.id);
 
   if (user) {
     user.name = req.body.name || user.name;
@@ -317,7 +317,7 @@ const updateUser = asyncHandler(async (req, res) => {
 // @route   DELETE /api/users/:id
 // @access  Private/Admin
 const deleteUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await QRUser.findById(req.params.id);
 
   if (user) {
     await user.deleteOne();

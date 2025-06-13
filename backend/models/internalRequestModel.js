@@ -12,12 +12,12 @@ const internalRequestSchema = mongoose.Schema(
     },
     requester: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'QRUser',
       required: true,
     },
     recipients: [{
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'QRUser',
       required: true,
     }],
     status: {
@@ -33,7 +33,7 @@ const internalRequestSchema = mongoose.Schema(
     responses: [{
       recipient: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'QRUser',
         required: true,
       },
       status: {
