@@ -29,11 +29,30 @@ const verifySignature = (data, signature) => {
 };
 
 // Generate QR code and upload to S3
-const generateAndUploadQR = async (uuid, baseUrl) => {
+const generateAndUploadQR = async (uuid, baseUrl, bundle = null) => {
   try {
-    // Generate QR URL with signature
-    const signature = generateSignature(uuid);
-    const qrUrl = `${baseUrl}/qr/${uuid}?sig=${signature}`;
+    let qrUrl;
+    let signature = generateSignature(uuid);
+    
+    // Check if we should use direct S3 URL instead of scan page
+    if (bundle && bundle.documents && bundle.documents.length === 1) {
+      // For single document bundles, point directly to the S3 URL
+      const Document = require('../models/documentModel');
+      const document = await Document.findById(bundle.documents[0]);
+      if (document && document.s3Key) {
+        const { getDirectS3Url } = require('./s3');
+        qrUrl = getDirectS3Url(document.s3Key);
+        console.log(`QR Code will point directly to S3 URL: ${qrUrl}`);
+      } else {
+        // Fallback to scan page if document not found
+        qrUrl = `${baseUrl}/scan/${uuid}?sig=${signature}`;
+        console.log(`QR Code will point to scan page (fallback): ${qrUrl}`);
+      }
+    } else {
+      // Use scan page for multi-document bundles
+      qrUrl = `${baseUrl}/scan/${uuid}?sig=${signature}`;
+      console.log(`QR Code will point to scan page (multi-document): ${qrUrl}`);
+    }
     
     // Generate QR code
     const qrBuffer = await QRCode.toBuffer(qrUrl, {

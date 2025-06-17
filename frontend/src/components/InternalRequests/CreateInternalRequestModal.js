@@ -141,7 +141,27 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
         dueDate: formData.dueDate || null
       };
 
+      // Debug logging
+      console.log('=== FRONTEND DEBUG ===');
+      console.log('Submitting internal request with data:', submitData);
+      console.log('Recipients array:', formData.recipients);
+      console.log('Recipients length:', formData.recipients.length);
+      console.log('Recipients type check:', formData.recipients.map(r => ({ value: r, type: typeof r })));
+      console.log('Current user token payload:', (() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          try {
+            return JSON.parse(atob(token.split('.')[1]));
+          } catch (e) {
+            return 'Failed to parse token';
+          }
+        }
+        return 'No token found';
+      })());
+      console.log('=== END FRONTEND DEBUG ===');
+
       const response = await api.post('/internal-requests', submitData);
+      console.log('Response received:', response.data);
       toast.success('Request sent successfully!');
       if (onSuccess) {
         onSuccess(response.data.request);
@@ -149,6 +169,8 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
       onClose();
     } catch (error) {
       console.error('Error creating request:', error);
+      console.error('Error details:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       toast.error(error.response?.data?.message || 'Failed to send request');
     } finally {
       setSubmitting(false);

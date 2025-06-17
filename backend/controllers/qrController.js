@@ -131,7 +131,8 @@ const createQRBundle = asyncHandler(async (req, res) => {
   const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   const { qrCodeUrl, signature } = await generateAndUploadQR(
     qrBundle.uuid,
-    baseUrl
+    baseUrl,
+    qrBundle // Pass the bundle object to determine QR URL logic
   );
 
   // Update QR bundle with QR code URL and signature
@@ -337,12 +338,24 @@ const getQRBundleById = asyncHandler(async (req, res) => {
 
   const qrBundle = await QRBundle.findById(req.params.id)
     .populate('creator', 'name email')
-    .populate('documents', 'originalName fileType s3Key description')
+    .populate('documents', 'originalName fileType s3Key description fileSize createdAt')
     .populate('approvalStatus.approver', 'name email');
 
   if (!qrBundle) {
     res.status(404);
     throw new Error('QR bundle not found');
+  }
+
+  // Add direct S3 URLs to documents
+  const qrBundleObj = qrBundle.toObject();
+  if (qrBundleObj.documents && qrBundleObj.documents.length > 0) {
+    const { getDirectS3Url } = require('../utils/s3');
+    qrBundleObj.documents = qrBundleObj.documents.map(doc => {
+      if (doc.s3Key) {
+        doc.s3Url = getDirectS3Url(doc.s3Key);
+      }
+      return doc;
+    });
   }
 
   // Check if user has access to this QR bundle
@@ -354,7 +367,7 @@ const getQRBundleById = asyncHandler(async (req, res) => {
   //   throw new Error('Not authorized to access this QR bundle');
   // }
 
-  res.json(qrBundle);
+  res.json(qrBundleObj);
 });
 
 // @desc    Get QR bundle by UUID (public access)

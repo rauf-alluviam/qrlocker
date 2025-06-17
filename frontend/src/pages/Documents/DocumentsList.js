@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   DocumentIcon, 
   EyeIcon, 
@@ -34,12 +34,21 @@ const DocumentsList = () => {
   const [groupBy, setGroupBy] = useState('');
   const [groupedData, setGroupedData] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
+  const location = useLocation();
+
+  // Force refresh documents when navigating to this page, especially from internal requests
+  useEffect(() => {
+    fetchDocuments(1);
+    // Reset page when navigating to this page
+    setCurrentPage(1);
+  }, [location.pathname]);
 
   const fetchDocuments = async (page = 1) => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
         page: page.toString(),
+        sort: '-createdAt', // Sort by newest first
         ...(searchTerm && { search: searchTerm }),
         ...(filters.fileType && { fileType: filters.fileType }),
         ...(filters.department && { department: filters.department }),

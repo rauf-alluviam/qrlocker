@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const path = require('path');
 const InternalRequest = require('../models/internalRequestModel');
 const User = require('../models/userModel');
 const QRBundle = require('../models/qrBundleModel');
@@ -20,6 +21,8 @@ const createInternalRequest = asyncHandler(async (req, res) => {
     isUrgent
   } = req.body;
 
+  // Debug logging
+
   // Validate required fields
   if (!requestTitle || !requestDescription || !recipients || recipients.length === 0) {
     res.status(400);
@@ -28,9 +31,19 @@ const createInternalRequest = asyncHandler(async (req, res) => {
 
   // Validate recipients are valid users
   const recipientUsers = await User.find({ 
-    _id: { $in: recipients },
-    _id: { $ne: req.user._id } // Can't send request to yourself
+    _id: { $in: recipients }
   }).select('_id name email');
+
+  
+  
+  const selfAsRecipient = recipients.includes(req.user._id.toString());
+
+  
+  if (selfAsRecipient) {
+
+    res.status(400);
+    throw new Error('Cannot send request to yourself');
+  }
 
   if (recipientUsers.length !== recipients.length) {
     res.status(400);
@@ -173,7 +186,7 @@ const getInternalRequestById = asyncHandler(async (req, res) => {
 // @access  Private
 const respondToInternalRequest = asyncHandler(async (req, res) => {
   const { status, responseMessage, qrBundleId } = req.body;
-  console.log(req.body);
+ 
   const documents = req.files ? req.files['documents'] : [];
 
   // Validate status
@@ -182,9 +195,9 @@ const respondToInternalRequest = asyncHandler(async (req, res) => {
     throw new Error('Invalid response status');
   }
 
-  // If accepting, require either documents or QR bundle (allow for empty response if accepting without anything)
-  if (status === 'accepted' && (!documents || documents.length === 0) && !qrBundleId) {
-    console.log('No documents or QR bundle provided for accepted response');
+  // If accepting, require either documents, documentIds, or QR bundle
+  if (status === 'accepted' && (!documents || documents.length === 0) && !qrBundleId && !req.body.documentIds) {
+  
     // Allow empty acceptance for backward compatibility - removed error
   }
 
@@ -217,17 +230,74 @@ const respondToInternalRequest = asyncHandler(async (req, res) => {
 
   // Handle file uploads if present
   let uploadedDocuments = [];
-  if (documents && documents.length > 0) {
+  let createdDocumentIds = [];
+  
+  // Check if document IDs were submitted (new approach)
+  if (req.body.documentIds) {
     try {
+      const Document = require('../models/documentModel');
+      // Parse the documentIds from the request
+      const documentIds = JSON.parse(req.body.documentIds);
+      
+      if (Array.isArray(documentIds) && documentIds.length > 0) {
+        // Get the documents from the database
+        const documents = await Document.find({ _id: { $in: documentIds } });
+        
+        if (documents.length > 0) {
+          createdDocumentIds = documents.map(doc => doc._id);
+          
+          // Format documents for the response
+          uploadedDocuments = documents.map(doc => ({
+            fileName: doc.originalName,
+            fileType: doc.fileType,
+            fileSize: doc.fileSize,
+            fileUrl: doc.s3Url,
+            key: doc.s3Key,
+            documentId: doc._id
+          }));
+        }
+      }
+    } catch (error) {
+      res.status(500);
+      throw new Error('Error processing document IDs: ' + error.message);
+    }
+  }
+  // Fallback to traditional file upload approach if documentIds is not provided
+  else if (documents && documents.length > 0) {
+    try {
+      const Document = require('../models/documentModel');
+      
       // Upload documents to S3 or your storage system
       uploadedDocuments = await Promise.all(documents.map(async (file) => {
-        const result = await uploadFile(file); // You'll need to implement this
+        const result = await uploadFile(file);
+        
+        // Create a Document model entry for each file
+        const documentData = {
+          originalName: file.originalname,
+          fileName: path.basename(result.Key),
+          fileType: file.mimetype,
+          fileSize: file.size,
+          s3Key: result.Key,
+          s3Url: result.Location,
+          uploadedBy: req.user._id,
+          organization: req.user.organization,
+          department: req.user.department,
+          description: `Uploaded as response to request: ${request.requestTitle}`,
+          tags: ['internal-request', 'response']
+        };
+        
+        // Save document to database
+        const document = await Document.create(documentData);
+        createdDocumentIds.push(document._id);
+        
+        // Return document metadata for the internal request response
         return {
           fileName: file.originalname,
           fileType: file.mimetype,
           fileSize: file.size,
           fileUrl: result.Location,
-          key: result.Key
+          key: result.Key,
+          documentId: document._id // Store reference to the Document model
         };
       }));
     } catch (error) {
@@ -350,8 +420,33 @@ const updateInternalRequest = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Cancel internal request (requester only)
+// @desc    Delete internal request
 // @route   DELETE /api/internal-requests/:id
+// @access  Private
+const deleteInternalRequest = asyncHandler(async (req, res) => {
+  const request = await InternalRequest.findById(req.params.id);
+
+  if (!request) {
+    res.status(404);
+    throw new Error('Internal request not found');
+  }
+
+  // Check if user is the requester or an admin
+  if (request.requester.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    res.status(403);
+    throw new Error('Only the requester or admin can delete this request');
+  }
+
+  // Actually delete the request from the database
+  await request.deleteOne();
+
+  res.json({
+    message: 'Request deleted successfully',
+  });
+});
+
+// @desc    Cancel internal request (change status to cancelled)
+// @route   PATCH /api/internal-requests/:id/cancel
 // @access  Private
 const cancelInternalRequest = asyncHandler(async (req, res) => {
   const request = await InternalRequest.findById(req.params.id);
@@ -367,11 +462,18 @@ const cancelInternalRequest = asyncHandler(async (req, res) => {
     throw new Error('Only the requester can cancel this request');
   }
 
+  // Only allow cancellation if request is still pending
+  if (request.status !== 'pending') {
+    res.status(400);
+    throw new Error('Can only cancel pending requests');
+  }
+
   request.status = 'cancelled';
   await request.save();
 
   res.json({
     message: 'Request cancelled successfully',
+    request
   });
 });
 
@@ -380,10 +482,10 @@ const cancelInternalRequest = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const deleteAllRequests = asyncHandler(async (req, res) => {
   // Only admin can delete all requests
-  if (req.user.role !== 'admin') {
-    res.status(403);
-    throw new Error('Only administrators can delete all requests');
-  }
+  // if (req.user.role !== 'admin') {
+  //   res.status(403);
+  //   throw new Error('Only administrators can delete all requests');
+  // }
 
   // Delete all requests
   await InternalRequest.deleteMany({});
@@ -460,6 +562,7 @@ module.exports = {
   getInternalRequestById,
   respondToInternalRequest,
   updateInternalRequest,
+  deleteInternalRequest,
   cancelInternalRequest,
   deleteAllRequests,
   getInternalRequestStats,

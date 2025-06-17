@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   XMarkIcon,
   UserIcon,
@@ -10,12 +11,14 @@ import {
   XCircleIcon,
   DocumentTextIcon,
   QrCodeIcon,
-  CloudArrowUpIcon
+  CloudArrowUpIcon,
+  DocumentArrowDownIcon
 } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 
 const InternalRequestDetailsModal = ({ isOpen, onClose, requestId, onRequestUpdated }) => {
+  const navigate = useNavigate();
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(false);
   const [responseLoading, setResponseLoading] = useState(false);
@@ -95,11 +98,9 @@ const InternalRequestDetailsModal = ({ isOpen, onClose, requestId, onRequestUpda
 
     try {
       setResponseLoading(true);
-      const formData = new FormData();
-      formData.append('status', responseData.status);
-      formData.append('responseMessage', responseData.responseMessage);
-      
-      // Set the progress handler
+      let uploadedDocumentIds = [];
+
+      // Set the progress handler config
       const config = {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -113,27 +114,110 @@ const InternalRequestDetailsModal = ({ isOpen, onClose, requestId, onRequestUpda
         }
       };
       
-      if (responseData.status === 'accepted') {
-        // Add files to the formData
-        if (files && files.length > 0) {
-          files.forEach(fileObj => {
-            formData.append('documents', fileObj.file);
-          });
-        }
+      // First, upload documents to the specific endpoint if accepting with files
+      if (responseData.status === 'accepted' && files && files.length > 0) {
+
         
-        // Add QR bundle ID if selected
-        if (responseData.qrBundleId) {
-          formData.append('qrBundleId', responseData.qrBundleId);
+        // Create a form data for document upload
+        const documentsFormData = new FormData();
+        
+        // Add description for the uploaded documents
+        documentsFormData.append('description', `Uploaded as response to request: ${request.requestTitle}`);
+        documentsFormData.append('tags', 'internal-request,response');
+        
+        // Add files to the formData
+        files.forEach((fileObj, index) => {
+          
+          documentsFormData.append('documents', fileObj.file);
+        });
+        
+        // Upload documents using the specific endpoint
+        try {
+     
+          // Use the documents/upload endpoint directly since api service already has the base URL
+          const uploadResponse = await api.post('/documents/upload', documentsFormData, config);
+   
+          
+          // Extract the document IDs from the response
+          if (uploadResponse.data && uploadResponse.data.documents) {
+            uploadedDocumentIds = uploadResponse.data.documents.map(doc => doc._id);
+          }
+        } catch (uploadError) {
+          console.error('Error uploading documents:', uploadError);
+          toast.error('Failed to upload documents');
+          setResponseLoading(false);
+          return;
         }
       }
+      
+      // Now create the response form data
+      const responseFormData = new FormData();
+      responseFormData.append('status', responseData.status);
+      responseFormData.append('responseMessage', responseData.responseMessage);
+     
+      
+      // Add the uploaded document IDs to the response
+      if (uploadedDocumentIds.length > 0) {
+        responseFormData.append('documentIds', JSON.stringify(uploadedDocumentIds));
 
-      const response = await api.post(`/internal-requests/${requestId}/respond`, formData, config);
-      console.log(response);
+      }
+      
+      // Add QR bundle ID if selected
+      if (responseData.status === 'accepted' && responseData.qrBundleId) {
+        responseFormData.append('qrBundleId', responseData.qrBundleId);
+
+      }
+
+
+      const response = await api.post(`/internal-requests/${requestId}/respond`, responseFormData, config);
+
       toast.success('Response sent successfully!');
+      
+      // Update the request with the latest data
       setRequest(response.data.request);
       setShowResponseForm(false);
       setResponseData({ status: 'accepted', responseMessage: '', qrBundleId: '' });
       setFiles([]);
+      
+      // If documents were uploaded, show a toast about them appearing in recent documents
+      if (uploadedDocumentIds.length > 0) {
+        toast.success(
+          <div>
+            {uploadedDocumentIds.length} document(s) added to your documents!
+            <button 
+              onClick={() => {
+                navigate('/documents');
+                onClose(); // Close the modal when navigating
+              }}
+              className="ml-2 underline text-blue-500 hover:text-blue-700"
+            >
+              View Documents
+            </button>
+          </div>
+        );
+      } else {
+        // Check for documents in the response as a fallback
+        const userResponse = response.data.request.responses.find(
+          r => r.recipient._id === getCurrentUserId()
+        );
+        
+        if (userResponse?.documents?.length > 0) {
+          toast.success(
+            <div>
+              {userResponse.documents.length} document(s) added to your documents!
+              <button 
+                onClick={() => {
+                  navigate('/documents');
+                  onClose(); // Close the modal when navigating
+                }}
+                className="ml-2 underline text-blue-500 hover:text-blue-700"
+              >
+                View Documents
+              </button>
+            </div>
+          );
+        }
+      }
       
       if (onRequestUpdated) {
         onRequestUpdated(response.data.request);
@@ -326,7 +410,7 @@ const InternalRequestDetailsModal = ({ isOpen, onClose, requestId, onRequestUpda
                         )}
                         
                         {response.sharedQrBundle && (
-                          <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                          <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-3">
                             <div className="flex items-center space-x-2">
                               <QrCodeIcon className="h-4 w-4 text-green-600" />
                               <span className="text-sm font-medium text-green-800">
@@ -342,6 +426,59 @@ const InternalRequestDetailsModal = ({ isOpen, onClose, requestId, onRequestUpda
                                 />
                               </div>
                             )}
+                          </div>
+                        )}
+
+                        {/* Display documents section */}
+                        {response.documents && response.documents.length > 0 && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-3">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <DocumentTextIcon className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-800">
+                                Attached Documents ({response.documents.length})
+                              </span>
+                            </div>
+                            <div className="space-y-2">
+                              {response.documents.map((doc, docIndex) => (
+                                <div key={docIndex} className="flex items-center justify-between p-2 bg-white rounded border border-blue-100">
+                                  <div className="flex items-center space-x-2 overflow-hidden">
+                                    <DocumentTextIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                                    <div className="overflow-hidden">
+                                      <p className="text-sm font-medium text-gray-900 truncate">{doc.fileName}</p>
+                                      <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => window.open(doc.fileUrl, '_blank')}
+                                      className="p-1 text-blue-600 hover:text-blue-800"
+                                      title="Download"
+                                    >
+                                      <DocumentArrowDownIcon className="h-5 w-5" />
+                                    </button>                                  {doc.documentId && (
+                                    <Link
+                                      to={`/documents/${doc.documentId}`}
+                                      className="p-1 text-blue-600 hover:text-blue-800"
+                                      title="View Document Details"
+                                      onClick={(e) => {
+                                        // This will keep the modal open if user just wants to view in a new tab
+                                        if (!e.ctrlKey && !e.metaKey) {
+                                          e.preventDefault();
+                                          navigate(`/documents/${doc.documentId}`);
+                                          onClose();
+                                        }
+                                      }}
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                      </svg>
+                                    </Link>
+                                  )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                         
@@ -559,12 +696,66 @@ const InternalRequestDetailsModal = ({ isOpen, onClose, requestId, onRequestUpda
                         <p className="text-sm text-gray-700">{userResponse.responseMessage}</p>
                       )}
                       {userResponse.sharedQrBundle && (
-                        <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                        <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-3">
                           <div className="flex items-center space-x-2">
                             <QrCodeIcon className="h-4 w-4 text-green-600" />
                             <span className="text-sm font-medium text-green-800">
                               You shared: {userResponse.sharedQrBundle.title}
                             </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Display user's uploaded documents */}
+                      {userResponse.documents && userResponse.documents.length > 0 && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <DocumentTextIcon className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">
+                              Documents You Shared ({userResponse.documents.length})
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {userResponse.documents.map((doc, docIndex) => (
+                              <div key={docIndex} className="flex items-center justify-between p-2 bg-white rounded border border-blue-100">
+                                <div className="flex items-center space-x-2 overflow-hidden">
+                                  <DocumentTextIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                                  <div className="overflow-hidden">
+                                    <p className="text-sm font-medium text-gray-900 truncate">{doc.fileName}</p>
+                                    <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</p>
+                                  </div>
+                                </div>
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => window.open(doc.fileUrl, '_blank')}
+                                    className="p-1 text-blue-600 hover:text-blue-800"
+                                    title="Download"
+                                  >
+                                    <DocumentArrowDownIcon className="h-5 w-5" />
+                                  </button>
+                                  {doc.documentId && (
+                                    <Link
+                                      to={`/documents/${doc.documentId}`}
+                                      className="p-1 text-blue-600 hover:text-blue-800"
+                                      title="View Document Details"
+                                      onClick={(e) => {
+                                        // This will keep the modal open if user just wants to view in a new tab
+                                        if (!e.ctrlKey && !e.metaKey) {
+                                          e.preventDefault();
+                                          navigate(`/documents/${doc.documentId}`);
+                                          onClose();
+                                        }
+                                      }}
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                      </svg>
+                                    </Link>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

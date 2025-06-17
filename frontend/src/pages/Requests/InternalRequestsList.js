@@ -88,6 +88,18 @@ const InternalRequestsList = () => {
     }
   };
 
+  
+  const handleCancelRequest = async (requestId) => {
+    try {
+      await api.patch(`/internal-requests/${requestId}/cancel`);
+      toast.success('Request cancelled successfully');
+      fetchRequests();
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      toast.error('Failed to cancel request');
+    }
+  };
+
   const handleDeleteAllRequests = async () => {
     try {
       await api.delete('/internal-requests/delete-all');
@@ -109,6 +121,8 @@ const InternalRequestsList = () => {
         return 'bg-green-100 text-green-800';
       case 'rejected':
         return 'bg-red-100 text-red-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-600';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -210,68 +224,84 @@ const InternalRequestsList = () => {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="mt-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+      {/* Header Actions */}
+      <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search requests..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search requests..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
+          </div>
+
+          <div className="flex gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            >
+              <option value="">All Priority</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            >
+              <option value="">All Categories</option>
+              <option value="financial">Financial</option>
+              <option value="legal">Legal</option>
+              <option value="compliance">Compliance</option>
+              <option value="operational">Operational</option>
+              <option value="other">Other</option>
+            </select>
+
+            <button
+              onClick={resetFilters}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <FunnelIcon className="h-4 w-4 mr-1" />
+              Clear
+            </button>
           </div>
         </div>
-
-        <div className="flex gap-2">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="rejected">Rejected</option>
-          </select>
-
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-          >
-            <option value="">All Priority</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-          >
-            <option value="">All Categories</option>
-            <option value="financial">Financial</option>
-            <option value="legal">Legal</option>
-            <option value="compliance">Compliance</option>
-            <option value="operational">Operational</option>
-            <option value="other">Other</option>
-          </select>
-
-          <button
-            onClick={resetFilters}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <FunnelIcon className="h-4 w-4 mr-1" />
-            Clear
-          </button>
-        </div>
+        
+        {/* Admin Actions */}
+        {user.role === 'user' && requests.length > 0 && (
+          <div className="mt-4 sm:mt-0 flex items-center space-x-2">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <TrashIcon className="h-4 w-4 mr-2" />
+              Delete All
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Requests Table */}
@@ -406,77 +436,72 @@ const InternalRequestsList = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                          <Menu as="div" className="relative inline-block text-left">
-                            <div>
-                              <Menu.Button className="flex items-center text-gray-400 hover:text-gray-600">
-                                <EllipsisVerticalIcon className="h-5 w-5" />
-                              </Menu.Button>
-                            </div>
-                            <Transition
-                              as={Fragment}
-                              enter="transition ease-out duration-100"
-                              enterFrom="transform opacity-0 scale-95"
-                              enterTo="transform opacity-100 scale-100"
-                              leave="transition ease-in duration-75"
-                              leaveFrom="transform opacity-100 scale-100"
-                              leaveTo="transform opacity-0 scale-95"
-                            >
-                              <Menu.Items className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                                <div className="py-1">
-                                  <Menu.Item>
-                                    {({ active }) => (
-                                      <button
-                                        onClick={() => handleViewDetails(request)}
-                                        className={`${
-                                          active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                                        } group flex items-center px-4 py-2 text-sm w-full text-left`}
-                                      >
-                                        <EyeIcon className="mr-3 h-4 w-4 text-gray-400" />
-                                        View Details
-                                      </button>
-                                    )}
-                                  </Menu.Item>
-                                  {request.requester._id === user.id && request.status === 'pending' && (
+                          <div className="flex items-center justify-end space-x-2">
+                            {/* Quick Delete Button */}
+                            {(user.role === 'user' || request.requester._id === user.id) && (
+                              <button
+                                onClick={() => {
+                                  setRequestToDelete(request);
+                                  setShowDeleteConfirm(true);
+                                }}
+                                className="text-red-400 hover:text-red-600 transition-colors"
+                                title="Delete Request"
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                              </button>
+                            )}
+                            
+                            {/* Actions Menu */}
+                            <Menu as="div" className="relative inline-block text-left">
+                              <div>
+                                <Menu.Button className="flex items-center text-gray-400 hover:text-gray-600">
+                                  <EllipsisVerticalIcon className="h-5 w-5" />
+                                </Menu.Button>
+                              </div>
+                              <Transition
+                                as={Fragment}
+                                enter="transition ease-out duration-100"
+                                enterFrom="transform opacity-0 scale-95"
+                                enterTo="transform opacity-100 scale-100"
+                                leave="transition ease-in duration-75"
+                                leaveFrom="transform opacity-100 scale-100"
+                                leaveTo="transform opacity-0 scale-95"
+                              >
+                                <Menu.Items className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                  <div className="py-1">
                                     <Menu.Item>
                                       {({ active }) => (
                                         <button
-                                          onClick={() => handleUpdateRequest(request._id, 'rejected')}
+                                          onClick={() => handleViewDetails(request)}
                                           className={`${
                                             active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                           } group flex items-center px-4 py-2 text-sm w-full text-left`}
                                         >
-                                          <XMarkIcon className="mr-3 h-4 w-4 text-gray-400" />
-                                          Cancel Request
+                                          <EyeIcon className="mr-3 h-4 w-4 text-gray-400" />
+                                          View Details
                                         </button>
                                       )}
                                     </Menu.Item>
-                                  )}
-
-                                  {/* Delete Option */}
-                                  {(user.role === 'admin' || request.requester._id === user.id) && (
-                                    <div className="border-t border-gray-100">
+                                    {request.requester._id === user.id && request.status === 'pending' && (
                                       <Menu.Item>
                                         {({ active }) => (
                                           <button
-                                            onClick={() => {
-                                              setRequestToDelete(request);
-                                              setShowDeleteConfirm(true);
-                                            }}
+                                            onClick={() => handleCancelRequest(request._id)}
                                             className={`${
-                                              active ? 'bg-red-50 text-red-900' : 'text-red-700'
+                                              active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                             } group flex items-center px-4 py-2 text-sm w-full text-left`}
                                           >
-                                            <TrashIcon className="mr-3 h-4 w-4" />
-                                            Delete Request
+                                            <XMarkIcon className="mr-3 h-4 w-4 text-gray-400" />
+                                            Cancel Request
                                           </button>
                                         )}
                                       </Menu.Item>
-                                    </div>
-                                  )}
-                                </div>
-                              </Menu.Items>
-                            </Transition>
-                          </Menu>
+                                    )}
+                                  </div>
+                                </Menu.Items>
+                              </Transition>
+                            </Menu>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -548,21 +573,6 @@ const InternalRequestsList = () => {
           </div>
         </div>
       )}
-
-      {/* Delete All Button for Admins */}
-      <div className="mt-4 sm:flex sm:items-center sm:justify-between">
-        <div className="flex items-center space-x-2">
-          {user.role === 'admin' && (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              <TrashIcon className="h-4 w-4 mr-2" />
-              Delete All Requests
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (

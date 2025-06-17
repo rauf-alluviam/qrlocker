@@ -209,10 +209,23 @@ const QRBundleView = () => {
     );
   }
 
-  // Include the hmacSignature to ensure the QR code works with the backend validation
-  const qrCodeUrl = bundle.hmacSignature 
-    ? `${window.location.origin}/scan/${bundle.uuid}?sig=${bundle.hmacSignature}` 
-    : `${window.location.origin}/scan/${bundle.uuid}`;
+  // Generate QR code URL - use direct S3 URL for single document bundles
+  const getQRCodeUrl = () => {
+    // If this is a single document bundle, use the direct S3 URL
+    if (bundle.documents && bundle.documents.length === 1) {
+      const document = bundle.documents[0];
+      if (document.s3Url) {
+        return document.s3Url;
+      }
+    }
+    
+    // Fallback to scan page URL with HMAC signature
+    return bundle.hmacSignature 
+      ? `${window.location.origin}/scan/${bundle.uuid}?sig=${bundle.hmacSignature}` 
+      : `${window.location.origin}/scan/${bundle.uuid}`;
+  };
+
+  const qrCodeUrl = getQRCodeUrl();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

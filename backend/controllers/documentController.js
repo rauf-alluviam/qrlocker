@@ -13,7 +13,13 @@ const QRBundle = require('../models/qrBundleModel');
 // @route   POST /api/documents/upload
 // @access  Private
 const uploadDocuments = asyncHandler(async (req, res) => {
+  console.log('Upload documents endpoint hit');
+  console.log('Files received:', req.files ? req.files.length : 0);
+  console.log('User:', req.user ? req.user._id : 'No user');
+  console.log('Body:', req.body);
+  
   if (!req.files || req.files.length === 0) {
+    console.log('No files uploaded');
     res.status(400);
     throw new Error('No files uploaded');
   }
@@ -818,7 +824,8 @@ const shareDocument = asyncHandler(async (req, res) => {
   const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   const { qrCodeUrl, signature } = await generateAndUploadQR(
     qrBundle.uuid,
-    baseUrl
+    baseUrl,
+    qrBundle // Pass the bundle object to determine QR URL logic
   );
 
   // Update QR bundle with QR code URL and signature

@@ -97,7 +97,7 @@ const Navigation = () => {
     // { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, roles: ['user', 'supervisor', 'admin'] },
     // { name: 'Document Requests', href: '/requests', icon: InboxIcon, roles: ['user', 'supervisor', 'admin'] },
     { name: 'Internal Requests', href: '/internal-requests', icon: UsersIcon, roles: ['user', 'supervisor', 'admin'] },
-    { name: 'Organizations', href: '/organizations', icon: BuildingOfficeIcon, roles: ['user', 'supervisor', 'admin'] },
+    // { name: 'Organizations', href: '/organizations', icon: BuildingOfficeIcon, roles: ['user', 'supervisor', 'admin'] },
     { name: 'Users', href: '/users', icon: UserGroupIcon, roles: ['admin'] },
   ];
 

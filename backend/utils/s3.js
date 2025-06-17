@@ -35,7 +35,7 @@ const s3Storage = multerS3({
       
       // Upload directly to uploads/ folder, bypassing organization/department structure
       const filePath = `uploads/${safeName}`;
-      console.log(`Generated S3 key: ${filePath}`);
+    
       cb(null, filePath);
     
     } catch (error) {
