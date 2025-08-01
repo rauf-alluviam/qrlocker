@@ -461,10 +461,10 @@ const QRBundlesList = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
-                QR Bundles
+               Documents
               </h1>
               <p className="mt-2 text-slate-600">
-                Manage your QR code bundles ({pagination.total || 0} total)
+                Manage your documents ({pagination.total || 0} total)
               </p>
             </div>
             <div className="flex items-center space-x-3">
@@ -512,7 +512,7 @@ const QRBundlesList = () => {
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-3 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search QR bundles by title or description..."
+                placeholder="Search documents by title or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200/60 rounded-xl bg-white/90 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
@@ -1097,7 +1097,7 @@ const QRBundlesList = () => {
                               className="group/btn w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg hover:shadow-xl hover:shadow-blue-200/50 transition-all duration-300 transform hover:-translate-y-0.5 relative overflow-hidden"
                             >
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 transform translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
-                              <span className="relative z-10">View Bundle Details</span>
+                              <span className="relative z-10">View  Details</span>
                               <EyeIcon className="relative z-10 ml-2 h-4 w-4 group-hover/btn:rotate-12 transition-transform duration-300" />
                             </Link>
                           </div>
@@ -1362,7 +1362,7 @@ const QRBundlesList = () => {
                   className="group/btn w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg hover:shadow-xl hover:shadow-blue-200/50 transition-all duration-300 transform hover:-translate-y-0.5 relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 transform translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
-                  <span className="relative z-10">View Bundle Details</span>
+                  <span className="relative z-10">View Details</span>
                   <EyeIcon className="relative z-10 ml-2 h-4 w-4 group-hover/btn:rotate-12 transition-transform duration-300" />
                 </Link>
               </div>

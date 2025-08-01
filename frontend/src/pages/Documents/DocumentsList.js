@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation ,useNavigate} from 'react-router-dom';
 import { 
   DocumentIcon, 
-  EyeIcon, 
   TrashIcon, 
   FunnelIcon,
   MagnifyingGlassIcon,
@@ -21,6 +20,7 @@ import { format } from 'date-fns';
 
 const DocumentsList = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
@@ -193,7 +193,8 @@ const DocumentsList = () => {
       }
       
       // Redirect to the QR bundle view page
-      window.location.href = `/qr-bundles/${qrBundle._id}`;
+      // window.location.href = `/qr-bundles/${qrBundle._id}`;
+ navigate(`/qr-bundles/${qrBundle._id}`);
     } catch (error) {
       toast.error('Failed to share document');
       console.error('Error sharing document:', error);
@@ -225,11 +226,14 @@ const DocumentsList = () => {
           {getFileIcon(document.fileType)}
         </div>
         <div className="min-w-0 flex-1">
-          <Link to={`/documents/${document._id}`} className="hover:underline">
+          <button
+            onClick={() => handleShareDocument(document)}
+            className="hover:underline text-left w-full"
+          >
             <h3 className="text-base font-medium text-gray-900 truncate">
               {document.originalName}
             </h3>
-          </Link>
+          </button>
           <div className="mt-1 flex items-center text-sm text-gray-500 space-x-4">
             <p className="truncate">
               {document.description?.length > 90 
@@ -262,13 +266,6 @@ const DocumentsList = () => {
           >
             <DocumentArrowDownIcon className="h-5 w-5" />
           </button>
-          <Link
-            to={`/documents/${document._id}`}
-            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full"
-            title="View details"
-          >
-            <EyeIcon className="h-5 w-5" />
-          </Link>
           {(user?.role === 'admin' || user?.role === 'supervisor' || user?.role === 'manager' || user?.role === 'user' || document.uploadedBy?._id === user?._id) && (
             <button
               onClick={() => handleDeleteDocument(document._id)}

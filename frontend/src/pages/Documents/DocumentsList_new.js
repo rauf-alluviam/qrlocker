@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useNavigate } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   DocumentIcon, 
@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 
 const DocumentsList = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
@@ -122,7 +123,8 @@ const DocumentsList = () => {
       }
       
       // Redirect to the QR bundle view page
-      window.location.href = `/qr-bundles/${qrBundle._id}`;
+      // window.location.href = `/qr-bundles/${qrBundle._id}`;
+       navigate(`/qr-bundles/${qrBundle._id}`);
     } catch (error) {
       toast.error('Failed to share document');
       console.error('Error sharing document:', error);

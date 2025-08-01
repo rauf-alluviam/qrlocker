@@ -13,7 +13,7 @@ const Header = ({ setSidebarOpen }) => {
     
     if (path === '/') return 'Dashboard';
     if (path.startsWith('/documents')) return 'Documents';
-    if (path.startsWith('/qr-bundles')) return 'QR Bundles';
+    if (path.startsWith('/qr-bundles')) return '';
     if (path.startsWith('/analytics')) return 'Analytics';
     if (path.startsWith('/requests')) return 'Document Requests';
     if (path.startsWith('/organizations')) return 'Organizations';
@@ -23,7 +23,7 @@ const Header = ({ setSidebarOpen }) => {
     return 'QRLocker';
   };
 
-  // Get action button based on the path
+  // Get action button based on the path  
   const getActionButton = () => {
     const path = location.pathname;
     
