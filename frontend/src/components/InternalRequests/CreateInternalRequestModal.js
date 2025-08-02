@@ -28,6 +28,11 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [errors, setErrors] = useState({});
+  
+  // Character limits
+  const TITLE_MAX_LENGTH = 100;
+  const DESCRIPTION_MAX_LENGTH = 1000;
 
   useEffect(() => {
     if (isOpen) {
@@ -49,6 +54,7 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
     });
     setSearchTerm('');
     setTagInput('');
+    setErrors({});
   };
 
   const fetchUsers = async () => {
@@ -80,10 +86,64 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    let newValue = type === 'checkbox' ? checked : value;
+    
+    // Apply character limits
+    if (name === 'requestTitle' && value.length > TITLE_MAX_LENGTH) {
+      newValue = value.substring(0, TITLE_MAX_LENGTH);
+    } else if (name === 'requestDescription' && value.length > DESCRIPTION_MAX_LENGTH) {
+      newValue = value.substring(0, DESCRIPTION_MAX_LENGTH);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: newValue
     }));
+    
+    // Clear field error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check required fields
+    if (!formData.requestTitle.trim()) {
+      newErrors.requestTitle = 'Request title is required';
+    } else if (formData.requestTitle.length > TITLE_MAX_LENGTH) {
+      newErrors.requestTitle = `Title must be ${TITLE_MAX_LENGTH} characters or less`;
+    }
+    
+    if (!formData.requestDescription.trim()) {
+      newErrors.requestDescription = 'Request description is required';
+    } else if (formData.requestDescription.length > DESCRIPTION_MAX_LENGTH) {
+      newErrors.requestDescription = `Description must be ${DESCRIPTION_MAX_LENGTH} characters or less`;
+    }
+    
+    if (formData.recipients.length === 0) {
+      newErrors.recipients = 'Please select at least one recipient';
+    }
+    
+    // Validate due date
+    if (formData.dueDate) {
+      const dueDate = new Date(formData.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+      
+      if (dueDate < today) {
+        newErrors.dueDate = 'Due date cannot be in the past';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleRecipientToggle = (userId) => {
@@ -124,13 +184,9 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (formData.recipients.length === 0) {
-      toast.error('Please select at least one recipient');
-      return;
-    }
-
-    if (!formData.requestTitle.trim() || !formData.requestDescription.trim()) {
-      toast.error('Please fill in all required fields');
+    // Validate form
+    if (!validateForm()) {
+      toast.error('Please fix the errors below');
       return;
     }
 
@@ -210,33 +266,45 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
               {/* Request Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Title *
+                  Request Title * ({formData.requestTitle.length}/{TITLE_MAX_LENGTH})
                 </label>
                 <input
                   type="text"
                   name="requestTitle"
                   required
+                  maxLength={TITLE_MAX_LENGTH}
                   value={formData.requestTitle}
                   onChange={handleInputChange}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className={`w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.requestTitle ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="Enter a clear, descriptive title"
                 />
+                {errors.requestTitle && (
+                  <p className="mt-1 text-sm text-red-600">{errors.requestTitle}</p>
+                )}
               </div>
 
               {/* Request Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description *
+                  Description * ({formData.requestDescription.length}/{DESCRIPTION_MAX_LENGTH})
                 </label>
                 <textarea
                   name="requestDescription"
                   required
                   rows={4}
+                  maxLength={DESCRIPTION_MAX_LENGTH}
                   value={formData.requestDescription}
                   onChange={handleInputChange}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className={`w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.requestDescription ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="Describe what documents or assistance you need..."
                 />
+                {errors.requestDescription && (
+                  <p className="mt-1 text-sm text-red-600">{errors.requestDescription}</p>
+                )}
               </div>
 
               {/* Priority and Category */}
@@ -289,8 +357,13 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
                     value={formData.dueDate}
                     onChange={handleInputChange}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className={`w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                      errors.dueDate ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   />
+                  {errors.dueDate && (
+                    <p className="mt-1 text-sm text-red-600">{errors.dueDate}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center pt-8">
@@ -351,6 +424,12 @@ const CreateInternalRequestModal = ({ isOpen, onClose, onSuccess }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Recipients * ({formData.recipients.length} selected)
                 </label>
+                
+                {errors.recipients && (
+                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">{errors.recipients}</p>
+                  </div>
+                )}
                 
                 {/* Search Users */}
                 <input

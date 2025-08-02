@@ -7,7 +7,7 @@ import Register from './pages/Auth/Register';
 import Dashboard from './pages/Dashboard/Dashboard';
 import DocumentsList from './pages/Documents/DocumentsList';
 import DocumentUpload from './pages/Documents/DocumentUpload';
-import DocumentView from './pages/Documents/DocumentView';
+
 import QRBundlesList from './pages/QRBundles/QRBundlesList';
 import QRBundleCreate from './pages/QRBundles/QRBundleCreate';
 import QRBundleView from './pages/QRBundles/QRBundleView';
@@ -65,7 +65,6 @@ function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="documents" element={<DocumentsList />} />
         <Route path="documents/upload" element={<DocumentUpload />} />
-        <Route path="documents/:id" element={<DocumentView />} />
         <Route path="qr-bundles" element={<QRBundlesList />} />
         <Route path="qr-bundles/create" element={<QRBundleCreate />} />
         <Route path="qr-bundles/:id" element={<QRBundleView />} />

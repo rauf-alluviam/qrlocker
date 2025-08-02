@@ -15,7 +15,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (userExists) {
     res.status(400);
-    throw new Error('User already exists');
+    throw new Error('User with this email already exists');
   }
 
   // Create new user
@@ -29,13 +29,14 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
+    // Populate the created user data before returning
+    const populatedUser = await User.findById(user._id)
+      .select('-password -twoFactorSecret')
+      .populate('organization', 'name')
+      .populate('department', 'name');
+
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      organization: user.organization,
-      department: user.department,
+      ...populatedUser.toObject(),
       token: generateToken(user._id),
     });
   } else {
@@ -254,12 +255,45 @@ const disable2FA = asyncHandler(async (req, res) => {
 // @route   GET /api/users
 // @access  Private/Admin
 const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({})
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const skip = (page - 1) * limit;
+
+  // Build query filters
+  const filters = {};
+  
+  if (req.query.role) {
+    filters.role = req.query.role;
+  }
+  
+  if (req.query.organization) {
+    filters.organization = req.query.organization;
+  }
+  
+  if (req.query.search) {
+    filters.$or = [
+      { name: { $regex: req.query.search, $options: 'i' } },
+      { email: { $regex: req.query.search, $options: 'i' } }
+    ];
+  }
+
+  const totalUsers = await User.countDocuments(filters);
+  const users = await User.find(filters)
     .select('-password -twoFactorSecret')
     .populate('organization', 'name')
-    .populate('department', 'name');
+    .populate('department', 'name')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
   
-  res.json(users);
+  res.json({
+    users,
+    pagination: {
+      page,
+      pages: Math.ceil(totalUsers / limit),
+      total: totalUsers
+    }
+  });
 });
 
 // @desc    Get user by ID
@@ -286,6 +320,15 @@ const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
 
   if (user) {
+    // Check for duplicate email if email is being changed
+    if (req.body.email && req.body.email !== user.email) {
+      const existingUser = await User.findOne({ email: req.body.email });
+      if (existingUser) {
+        res.status(400);
+        throw new Error('Email already exists');
+      }
+    }
+
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     user.role = req.body.role || user.role;
@@ -298,15 +341,13 @@ const updateUser = asyncHandler(async (req, res) => {
 
     const updatedUser = await user.save();
 
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      organization: updatedUser.organization,
-      department: updatedUser.department,
-      twoFactorEnabled: updatedUser.twoFactorEnabled,
-    });
+    // Populate the updated user data before returning
+    const populatedUser = await User.findById(updatedUser._id)
+      .select('-password -twoFactorSecret')
+      .populate('organization', 'name')
+      .populate('department', 'name');
+
+    res.json(populatedUser);
   } else {
     res.status(404);
     throw new Error('User not found');

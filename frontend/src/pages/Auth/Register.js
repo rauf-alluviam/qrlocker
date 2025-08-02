@@ -10,7 +10,12 @@ const Register = () => {
     confirmPassword: '',
     role: 'user',
   });
-  const [passwordError, setPasswordError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    feedback: '',
+    color: 'bg-gray-200'
+  });
   
   const { user, register, loading, error, isInitialized } = useAuthStore();
   const navigate = useNavigate();
@@ -23,27 +28,115 @@ const Register = () => {
     }
   }, [user, isInitialized, navigate]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Password strength checker
+  const checkPasswordStrength = (password) => {
+    if (!password) {
+      return { score: 0, feedback: '', color: 'bg-gray-200' };
+    }
+
+    let score = 0;
+    let feedback = [];
     
-    // Clear password error when either password field changes
-    if (e.target.name === 'password' || e.target.name === 'confirmPassword') {
-      setPasswordError('');
+    // Check length
+    if (password.length >= 8) score += 2;
+    else if (password.length >= 6) score += 1;
+    else feedback.push('at least 6 characters');
+    
+    // Check for uppercase
+    if (/[A-Z]/.test(password)) score += 1;
+    else feedback.push('uppercase letter');
+    
+    // Check for lowercase
+    if (/[a-z]/.test(password)) score += 1;
+    else feedback.push('lowercase letter');
+    
+    // Check for numbers
+    if (/\d/.test(password)) score += 1;
+    else feedback.push('number');
+    
+    // Check for special characters
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
+    else feedback.push('special character');
+
+    let strengthText = '';
+    let color = '';
+    
+    if (score <= 2) {
+      strengthText = `Weak${feedback.length > 0 ? ` - needs ${feedback.join(', ')}` : ''}`;
+      color = 'bg-red-400';
+    } else if (score <= 4) {
+      strengthText = `Medium${feedback.length > 0 ? ` - consider adding ${feedback.join(', ')}` : ''}`;
+      color = 'bg-yellow-400';
+    } else {
+      strengthText = 'Strong';
+      color = 'bg-green-400';
+    }
+
+    return { score, feedback: strengthText, color };
+  };
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Check all required fields
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long';
+    }
+    
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Clear specific field error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    
+    // Update password strength in real-time
+    if (name === 'password') {
+      setPasswordStrength(checkPasswordStrength(value));
+    }
+    
+    // Clear confirm password error when either password field changes
+    if ((name === 'password' || name === 'confirmPassword') && errors.confirmPassword) {
+      setErrors(prev => ({
+        ...prev,
+        confirmPassword: ''
+      }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check if passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setPasswordError('Passwords do not match');
-      return;
-    }
-    
-    // Check password strength
-    if (formData.password.length < 6) {
-      setPasswordError('Password must be at least 6 characters long');
+    // Validate form
+    if (!validateForm()) {
       return;
     }
     
@@ -94,11 +187,16 @@ const Register = () => {
                 type="text"
                 autoComplete="name"
                 required
-                className="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-t-md relative block w-full px-3 py-2 border ${
+                  errors.name ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
                 placeholder="Full Name"
                 value={formData.name}
                 onChange={handleChange}
               />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
             </div>
             <div>
               <label htmlFor="email-address" className="sr-only">
@@ -110,11 +208,16 @@ const Register = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className={`appearance-none relative block w-full px-3 py-2 border ${
+                  errors.email ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
@@ -126,11 +229,30 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className={`appearance-none relative block w-full px-3 py-2 border ${
+                  errors.password ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
               />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
+              {/* Password Strength Indicator */}
+              {formData.password && (
+                <div className="mt-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.color}`}
+                        style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{passwordStrength.feedback}</p>
+                </div>
+              )}
             </div>
             <div>
               <label htmlFor="confirmPassword" className="sr-only">
@@ -142,19 +264,18 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-b-md relative block w-full px-3 py-2 border ${
+                  errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+              )}
             </div>
           </div>
-
-          {passwordError && (
-            <div className="text-sm text-error-500">
-              {passwordError}
-            </div>
-          )}
 
           {error && (
             <div className="text-sm text-error-500">

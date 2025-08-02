@@ -26,6 +26,11 @@ const DocumentRequestCreate = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [requestId, setRequestId] = useState(null);
+  const [errors, setErrors] = useState({});
+  
+  // Character limits
+  const TITLE_MAX_LENGTH = 100;
+  const DESCRIPTION_MAX_LENGTH = 1000;
 
   useEffect(() => {
     fetchOrganizations();
@@ -78,28 +83,74 @@ const DocumentRequestCreate = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Apply character limits
+    let newValue = value;
+    if (name === 'requestTitle' && value.length > TITLE_MAX_LENGTH) {
+      newValue = value.substring(0, TITLE_MAX_LENGTH);
+    } else if (name === 'requestDescription' && value.length > DESCRIPTION_MAX_LENGTH) {
+      newValue = value.substring(0, DESCRIPTION_MAX_LENGTH);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: newValue,
     }));
+    
+    // Clear field error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Check all required fields
+    if (!formData.requesterName.trim()) {
+      newErrors.requesterName = 'Name is required';
+    }
+    
+    if (!formData.requesterEmail.trim()) {
+      newErrors.requesterEmail = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.requesterEmail)) {
+      newErrors.requesterEmail = 'Please enter a valid email address';
+    }
+    
+    if (!formData.organization) {
+      newErrors.organization = 'Organization is required';
+    }
+    
+    if (!formData.department) {
+      newErrors.department = 'Department is required';
+    }
+    
+    if (!formData.requestTitle.trim()) {
+      newErrors.requestTitle = 'Request title is required';
+    } else if (formData.requestTitle.length > TITLE_MAX_LENGTH) {
+      newErrors.requestTitle = `Title must be ${TITLE_MAX_LENGTH} characters or less`;
+    }
+    
+    if (!formData.requestDescription.trim()) {
+      newErrors.requestDescription = 'Request description is required';
+    } else if (formData.requestDescription.length > DESCRIPTION_MAX_LENGTH) {
+      newErrors.requestDescription = `Description must be ${DESCRIPTION_MAX_LENGTH} characters or less`;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate required fields
-    const requiredFields = ['requesterName', 'requesterEmail', 'organization', 'department', 'requestTitle', 'requestDescription'];
-    const missingFields = requiredFields.filter(field => !formData[field].trim());
-    
-    if (missingFields.length > 0) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.requesterEmail)) {
-      toast.error('Please enter a valid email address');
+    // Validate form
+    if (!validateForm()) {
+      toast.error('Please fix the errors below');
       return;
     }
 
@@ -190,10 +241,15 @@ const DocumentRequestCreate = () => {
                   required
                   value={formData.requesterName}
                   onChange={handleInputChange}
-                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className={`pl-10 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.requesterName ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="Your full name"
                 />
               </div>
+              {errors.requesterName && (
+                <p className="mt-1 text-sm text-red-600">{errors.requesterName}</p>
+              )}
             </div>
 
             {/* Requester Email */}
@@ -212,10 +268,15 @@ const DocumentRequestCreate = () => {
                   required
                   value={formData.requesterEmail}
                   onChange={handleInputChange}
-                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className={`pl-10 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.requesterEmail ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="your.email@example.com"
                 />
               </div>
+              {errors.requesterEmail && (
+                <p className="mt-1 text-sm text-red-600">{errors.requesterEmail}</p>
+              )}
             </div>
 
             {/* Organization */}
@@ -233,7 +294,9 @@ const DocumentRequestCreate = () => {
                   required
                   value={formData.organization}
                   onChange={handleInputChange}
-                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className={`pl-10 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.organization ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 >
                   <option value="">Select an organization</option>
                   {organizations.map((org) => (
@@ -243,6 +306,9 @@ const DocumentRequestCreate = () => {
                   ))}
                 </select>
               </div>
+              {errors.organization && (
+                <p className="mt-1 text-sm text-red-600">{errors.organization}</p>
+              )}
             </div>
 
             {/* Department */}
@@ -261,7 +327,9 @@ const DocumentRequestCreate = () => {
                   value={formData.department}
                   onChange={handleInputChange}
                   disabled={!formData.organization}
-                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className={`pl-10 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                    errors.department ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 >
                   <option value="">Select a department</option>
                   {departments.map((dept) => (
@@ -271,7 +339,10 @@ const DocumentRequestCreate = () => {
                   ))}
                 </select>
               </div>
-              {!formData.organization && (
+              {errors.department && (
+                <p className="mt-1 text-sm text-red-600">{errors.department}</p>
+              )}
+              {!formData.organization && !errors.department && (
                 <p className="mt-1 text-sm text-gray-500">Please select an organization first</p>
               )}
             </div>
@@ -279,35 +350,47 @@ const DocumentRequestCreate = () => {
             {/* Request Title */}
             <div>
               <label htmlFor="requestTitle" className="block text-sm font-medium text-gray-700">
-                Request Title *
+                Request Title * ({formData.requestTitle.length}/{TITLE_MAX_LENGTH})
               </label>
               <input
                 id="requestTitle"
                 name="requestTitle"
                 type="text"
                 required
+                maxLength={TITLE_MAX_LENGTH}
                 value={formData.requestTitle}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                  errors.requestTitle ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="Brief title for your request"
               />
+              {errors.requestTitle && (
+                <p className="mt-1 text-sm text-red-600">{errors.requestTitle}</p>
+              )}
             </div>
 
             {/* Request Description */}
             <div>
               <label htmlFor="requestDescription" className="block text-sm font-medium text-gray-700">
-                Request Description *
+                Request Description * ({formData.requestDescription.length}/{DESCRIPTION_MAX_LENGTH})
               </label>
               <textarea
                 id="requestDescription"
                 name="requestDescription"
                 rows={4}
                 required
+                maxLength={DESCRIPTION_MAX_LENGTH}
                 value={formData.requestDescription}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                  errors.requestDescription ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="Describe what documents you need and why you need access to them..."
               />
+              {errors.requestDescription && (
+                <p className="mt-1 text-sm text-red-600">{errors.requestDescription}</p>
+              )}
             </div>
 
             {/* Submit Button */}

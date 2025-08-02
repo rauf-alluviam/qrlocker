@@ -92,8 +92,8 @@ const Navigation = () => {
   
   const navigation = [
     { name: 'Dashboard', href: '/', icon: HomeIcon, roles: ['user', 'supervisor', 'admin'] },
-    // { name: 'Documents', href: '/documents', icon: DocumentTextIcon, roles: ['user', 'supervisor', 'admin'] },
-    { name: 'Documents', href: '/qr-bundles', icon: QrCodeIcon, roles: ['user', 'supervisor', 'admin'] },
+    { name: 'Documents', href: '/documents', icon: DocumentTextIcon, roles: ['user', 'supervisor', 'admin'] },
+    { name: 'Qr Bundle', href: '/qr-bundles', icon: QrCodeIcon, roles: ['user', 'supervisor', 'admin'] },
     // { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, roles: ['user', 'supervisor', 'admin'] },
     // { name: 'Document Requests', href: '/requests', icon: InboxIcon, roles: ['user', 'supervisor', 'admin'] },
     { name: 'Internal Requests', href: '/internal-requests', icon: UsersIcon, roles: ['user', 'supervisor', 'admin'] },

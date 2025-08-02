@@ -47,23 +47,41 @@ const UserManagement = () => {
   });
 
   useEffect(() => {
-    fetchUsers();
     fetchOrganizations();
-  }, [searchTerm, roleFilter, organizationFilter, pagination.page]);
+  }, []);
+
+  useEffect(() => {
+    // Debounce search to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      fetchUsers();
+    }, searchTerm ? 500 : 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, roleFilter, organizationFilter]);
+
+  // Remove client-side filtering since we're now filtering on the backend
+  const filteredUsers = users;
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
         page: pagination.page,
-        search: searchTerm,
-        role: roleFilter,
-        organization: organizationFilter,
+        ...(searchTerm && { search: searchTerm }),
+        ...(roleFilter && { role: roleFilter }),
+        ...(organizationFilter && { organization: organizationFilter }),
       });
 
       const response = await api.get(`/users?${params}`);
-      setUsers(response.data.users || response.data);
-      setPagination(response.data.pagination || { page: 1, pages: 1, total: response.data.length });
+      
+      // Handle both old and new API response formats
+      if (response.data.users) {
+        setUsers(response.data.users);
+        setPagination(response.data.pagination || { page: 1, pages: 1, total: response.data.users.length });
+      } else {
+        setUsers(response.data);
+        setPagination({ page: 1, pages: 1, total: response.data.length });
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to fetch users');
@@ -100,7 +118,8 @@ const UserManagement = () => {
     e.preventDefault();
     try {
       const response = await api.post('/users/register', formData);
-      setUsers([response.data, ...users]);
+      // Refresh the user list to get the latest data with proper filtering
+      fetchUsers();
       setShowCreateModal(false);
       resetForm();
       toast.success('User created successfully');
@@ -192,15 +211,6 @@ const UserManagement = () => {
     };
     return badges[role] || 'bg-gray-100 text-gray-800';
   };
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-                         (user.email?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-    const matchesRole = !roleFilter || user.role === roleFilter;
-    const matchesOrg = !organizationFilter || user.organization?._id === organizationFilter;
-    
-    return matchesSearch && matchesRole && matchesOrg;
-  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

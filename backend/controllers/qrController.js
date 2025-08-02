@@ -167,6 +167,14 @@ const getAllQRBundles = asyncHandler(async (req, res) => {
     queryFilters['approvalStatus.status'] = req.query.status;
   }
   
+  if (req.query.isPublic) {
+    queryFilters['accessControl.isPublic'] = req.query.isPublic === 'true';
+  }
+  
+  if (req.query.hasPasscode) {
+    queryFilters['accessControl.hasPasscode'] = req.query.hasPasscode === 'true';
+  }
+  
   if (req.query.search) {
     queryFilters.$or = [
       { title: { $regex: req.query.search, $options: 'i' } },

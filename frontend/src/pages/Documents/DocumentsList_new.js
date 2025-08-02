@@ -2,7 +2,6 @@ import React, { useState, useEffect, useNavigate } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   DocumentIcon, 
-  EyeIcon, 
   TrashIcon, 
   FunnelIcon,
   MagnifyingGlassIcon,
@@ -106,7 +105,7 @@ const DocumentsList = () => {
       // Create a QR bundle with this document
       const response = await api.post('/qr', {
         title: `Shared: ${document.originalName}`,
-        description: `Shared document: ${document.originalName}`,
+        description: document.description || `Shared document: ${document.originalName}`,
         documents: [document._id],
         isPublic: true,
         hasPasscode: false,
@@ -319,13 +318,6 @@ const DocumentsList = () => {
                     >
                       <DocumentArrowDownIcon className="h-5 w-5" />
                     </button>
-                    <Link
-                      to={`/documents/${document._id}`}
-                      className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full"
-                      title="View details"
-                    >
-                      <EyeIcon className="h-5 w-5" />
-                    </Link>
                     {(user?.role === 'admin' || user?.role === 'manager' || document.uploadedBy?._id === user?._id) && (
                       <button
                         onClick={() => handleDeleteDocument(document._id)}

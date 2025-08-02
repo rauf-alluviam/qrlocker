@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import { 
   ArrowLeftIcon,
@@ -338,7 +338,7 @@ const QRBundleView = () => {
                 >
                   Documents ({bundle.documents?.length || 0})
                 </button>
-                <button
+                {/* <button
                   onClick={() => setActiveTab('activity')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === 'activity'
@@ -347,7 +347,7 @@ const QRBundleView = () => {
                   }`}
                 >
                   Activity ({scanLogs.length})
-                </button>
+                </button> */}
               </nav>
             </div>
 
@@ -355,14 +355,16 @@ const QRBundleView = () => {
               {/* Details Tab */}
               {activeTab === 'details' && (
                 <div className="space-y-6">
-                  {bundle.customMessage && (
+                  {bundle.description && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">Custom Message</h4>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Description</h4>
                       <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
-                        {bundle.customMessage}
+                        {bundle.description}
                       </p>
                     </div>
                   )}
+
+                 
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -452,13 +454,6 @@ const QRBundleView = () => {
                             >
                               <DocumentArrowDownIcon className="h-4 w-4" />
                             </button>
-                            <Link
-                              to={`/documents/${document._id}`}
-                              className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded"
-                              title="View document details"
-                            >
-                              <EyeIcon className="h-4 w-4" />
-                            </Link>
                           </div>
                         </div>
                       ))}
@@ -473,7 +468,7 @@ const QRBundleView = () => {
               )}
 
               {/* Activity Tab */}
-              {activeTab === 'activity' && (
+              {/* {activeTab === 'activity' && (
                 <div>
                   {scanLogs.length > 0 ? (
                     <div className="space-y-3">
@@ -507,7 +502,7 @@ const QRBundleView = () => {
                     </div>
                   )}
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>
@@ -522,16 +517,7 @@ const QRBundleView = () => {
                 <UserIcon className="h-4 w-4 text-gray-500 mr-2" />
                 <span>Created by {bundle.creator?.name}</span>
               </div>
-              <div className="flex items-center">
-                <BuildingOfficeIcon className="h-4 w-4 text-gray-500 mr-2" />
-                <span>{bundle.organization?.name}</span>
-              </div>
-              {bundle.department && (
-                <div className="flex items-center">
-                  <BuildingOfficeIcon className="h-4 w-4 text-gray-500 mr-2" />
-                  <span>{bundle.department.name}</span>
-                </div>
-              )}
+             
             </div>
           </div>
 

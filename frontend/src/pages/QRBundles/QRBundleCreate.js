@@ -34,6 +34,10 @@ const QRBundleCreate = () => {
     maxViews: '',
     customMessage: ''
   });
+  const [errors, setErrors] = useState({});
+  
+  // Character limits
+  const TITLE_MAX_LENGTH = 100;
 
   useEffect(() => {
     fetchAvailableDocuments();
@@ -51,10 +55,81 @@ const QRBundleCreate = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    let newValue = type === 'checkbox' ? checked : value;
+    
+    // Apply character limits
+    if (name === 'title' && value.length > TITLE_MAX_LENGTH) {
+      newValue = value.substring(0, TITLE_MAX_LENGTH);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: newValue
     }));
+    
+    // Clear field error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+    
+    // Check required fields
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    } else if (formData.title.length > TITLE_MAX_LENGTH) {
+      newErrors.title = `Title must be ${TITLE_MAX_LENGTH} characters or less`;
+    }
+    
+    if (formData.documents.length === 0) {
+      newErrors.documents = 'Please select at least one document';
+    }
+    
+    // Validate publish date
+    if (formData.publishDate) {
+      const publishDate = new Date(formData.publishDate);
+      publishDate.setHours(0, 0, 0, 0);
+      
+      if (publishDate < today) {
+        newErrors.publishDate = 'Publish date cannot be in the past';
+      }
+    }
+    
+    // Validate expiry date
+    if (formData.expiryDate) {
+      const expiryDate = new Date(formData.expiryDate);
+      expiryDate.setHours(0, 0, 0, 0);
+      
+      if (expiryDate < today) {
+        newErrors.expiryDate = 'Expiry date cannot be in the past';
+      }
+      
+      // If both dates are set, expiry should be after publish
+      if (formData.publishDate) {
+        const publishDate = new Date(formData.publishDate);
+        publishDate.setHours(0, 0, 0, 0);
+        
+        if (expiryDate <= publishDate) {
+          newErrors.expiryDate = 'Expiry date must be after publish date';
+        }
+      }
+    }
+    
+    // Validate max views
+    if (formData.maxViews && (isNaN(formData.maxViews) || parseInt(formData.maxViews) <= 0)) {
+      newErrors.maxViews = 'Max views must be a positive number';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleDocumentToggle = (document) => {
@@ -110,13 +185,9 @@ const QRBundleCreate = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.title.trim()) {
-      toast.error('Please enter a title for the QR bundle');
-      return;
-    }
-
-    if (formData.documents.length === 0) {
-      toast.error('Please select at least one document');
+    // Validate form
+    if (!validateForm()) {
+      toast.error('Please fix the errors below');
       return;
     }
 
@@ -182,18 +253,24 @@ const QRBundleCreate = () => {
           <div className="space-y-4">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title *
+                Title * ({formData.title.length}/{TITLE_MAX_LENGTH})
               </label>
               <input
                 type="text"
                 id="title"
                 name="title"
                 required
+                maxLength={TITLE_MAX_LENGTH}
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="Enter a descriptive title for your QR bundle"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                className={`mt-1 block w-full border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500 ${
+                  errors.title ? 'border-red-300' : 'border-gray-300'
+                }`}
               />
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+              )}
             </div>
             
             <div>
@@ -241,6 +318,12 @@ const QRBundleCreate = () => {
               Add Documents
             </button>
           </div>
+          
+          {errors.documents && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{errors.documents}</p>
+            </div>
+          )}
 
           {/* Selected Documents */}
           {documents.length > 0 && (
@@ -362,9 +445,14 @@ const QRBundleCreate = () => {
                   name="publishDate"
                   value={formData.publishDate}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500 ${
+                    errors.publishDate ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
                 <p className="mt-1 text-xs text-gray-500">When the QR bundle becomes available</p>
+                {errors.publishDate && (
+                  <p className="mt-1 text-sm text-red-600">{errors.publishDate}</p>
+                )}
               </div>
               
               <div>
@@ -377,9 +465,14 @@ const QRBundleCreate = () => {
                   name="expiryDate"
                   value={formData.expiryDate}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500 ${
+                    errors.expiryDate ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
                 <p className="mt-1 text-xs text-gray-500">When the QR bundle expires (optional)</p>
+                {errors.expiryDate && (
+                  <p className="mt-1 text-sm text-red-600">{errors.expiryDate}</p>
+                )}
               </div>
             </div>
 
@@ -396,9 +489,14 @@ const QRBundleCreate = () => {
                 value={formData.maxViews}
                 onChange={handleInputChange}
                 placeholder="0 = unlimited"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                className={`mt-1 block w-full border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500 ${
+                  errors.maxViews ? 'border-red-300' : 'border-gray-300'
+                }`}
               />
               <p className="mt-1 text-xs text-gray-500">Limit the number of times this bundle can be viewed (0 for unlimited)</p>
+              {errors.maxViews && (
+                <p className="mt-1 text-sm text-red-600">{errors.maxViews}</p>
+              )}
             </div>
           </div>
         </div>

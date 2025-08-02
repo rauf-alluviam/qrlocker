@@ -73,21 +73,7 @@ const Header = ({ setSidebarOpen }) => {
               </h1>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex">
-              {getActionButton()}
-            </div>
-            <div className="flex items-center">
-              <button
-                type="button"
-                className="relative p-2 rounded-xl text-gray-500 hover:text-primary-600 hover:bg-primary-50/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500/30 group"
-              >
-                <span className="sr-only">View notifications</span>
-                <BellIcon className="h-6 w-6" aria-hidden="true" />
-                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white group-hover:ring-primary-50 transition-all duration-200"></span>
-              </button>
-            </div>
-          </div>
+          
         </div>
       </div>
     </header>

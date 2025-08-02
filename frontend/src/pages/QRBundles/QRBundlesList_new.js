@@ -18,7 +18,6 @@ const QRBundlesList = () => {
   const {
     bundles,
     loading,
-    searching,
     pagination,
     currentPage,
     searchTerm,
@@ -29,13 +28,11 @@ const QRBundlesList = () => {
     expandedGroups,
     viewMode,
     setCurrentPage,
-    handleSearchTermChange,
+    setSearchTerm,
     setFilters,
     setShowFilters,
     setViewMode,
     handleSearch,
-    applyFilters,
-    clearFilters,
     toggleGroup,
     handleGroupByChange,
     handleDeleteBundle
@@ -64,9 +61,8 @@ const QRBundlesList = () => {
             setViewMode={setViewMode}
           />
           <QRBundlesSearch
-            
             searchTerm={searchTerm}
-            onSearchTermChange={handleSearchTermChange}
+            onSearchTermChange={setSearchTerm}
             filters={filters}
             onFiltersChange={setFilters}
             showFilters={showFilters}
@@ -74,9 +70,6 @@ const QRBundlesList = () => {
             groupBy={groupBy}
             onGroupByChange={handleGroupByChange}
             onSearch={handleSearch}
-            applyFilters={applyFilters}
-            clearFilters={clearFilters}
-            searching={searching}
           />
           <QRBundlesEmptyState 
             searchTerm={searchTerm}
@@ -100,7 +93,7 @@ const QRBundlesList = () => {
         {/* Search Component */}
         <QRBundlesSearch
           searchTerm={searchTerm}
-          onSearchTermChange={handleSearchTermChange}
+          onSearchTermChange={setSearchTerm}
           filters={filters}
           onFiltersChange={setFilters}
           showFilters={showFilters}
@@ -108,9 +101,6 @@ const QRBundlesList = () => {
           groupBy={groupBy}
           onGroupByChange={handleGroupByChange}
           onSearch={handleSearch}
-          applyFilters={applyFilters}
-          clearFilters={clearFilters}
-          searching={searching}
         />
 
         {/* Content based on grouping */}
