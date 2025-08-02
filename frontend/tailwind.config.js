@@ -134,7 +134,8 @@ module.exports = {
         'blue-purple': 'linear-gradient(135deg, #2563eb 0%, #9333ea 100%)',
         'blue-green': 'linear-gradient(135deg, #2563eb 0%, #22c55e 100%)',
         'green-blue': 'linear-gradient(135deg, #4ade80 0%, #3b82f6 100%)',
-        'sidebar-gradient': 'linear-gradient(180deg, #2563eb 0%, #1e40af 50%, #1e3a8a 100%)',
+        'sidebar-gradient': 'linear-gradient(180deg, #1e293b 0%, #334155 50%, #475569 100%)',
+        'professional-gradient': 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
       },
       animation: {
         'fade-in': 'fadeIn 0.6s ease-out forwards',

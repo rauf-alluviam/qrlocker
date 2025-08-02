@@ -55,20 +55,20 @@ const Header = ({ setSidebarOpen }) => {
   };
 
   return (
-    <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-soft-sm z-10 sticky top-0">
+    <header className="bg-white border-b border-gray-200 shadow-sm z-10 sticky top-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <button
               type="button"
-              className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex md:hidden items-center justify-center rounded-xl text-gray-500 hover:text-primary-600 hover:bg-primary-50/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:bg-primary-50"
+              className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex md:hidden items-center justify-center rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-blue-50"
               onClick={() => setSidebarOpen(true)}
             >
               <span className="sr-only">Open sidebar</span>
               <Bars3Icon className="h-6 w-6" aria-hidden="true" />
             </button>
             <div className="flex-shrink-0 flex items-center ml-2 md:ml-0">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-gray-900">
                 {getPageTitle()}
               </h1>
             </div>

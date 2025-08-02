@@ -80,9 +80,9 @@ const Dashboard = () => {
     <div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {/* Documents Stats Card */}
-        <div className="card p-6 bg-gradient-to-br from-white to-blue-50/50 border border-blue-100/50">
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
           <div className="flex items-center">
-            <div className="flex-shrink-0 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 p-3 shadow-soft">
+            <div className="flex-shrink-0 rounded-lg bg-blue-500 p-3">
               <DocumentTextIcon className="h-6 w-6 text-white" aria-hidden="true" />
             </div>
             <div className="ml-5 w-0 flex-1">
@@ -101,16 +101,16 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="mt-4">
-            <Link to="/documents" className="text-sm font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200">
+            <Link to="/documents" className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
               View all documents
             </Link>
           </div>
         </div>
 
         {/* QR Bundles Stats Card */}
-        <div className="card p-6 bg-gradient-to-br from-white to-purple-50/50 border border-purple-100/50">
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
           <div className="flex items-center">
-            <div className="flex-shrink-0 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600 p-3 shadow-soft">
+            <div className="flex-shrink-0 rounded-lg bg-purple-500 p-3">
               <QrCodeIcon className="h-6 w-6 text-white" aria-hidden="true" />
             </div>
             <div className="ml-5 w-0 flex-1">
@@ -129,16 +129,16 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="mt-4">
-            <Link to="/qr-bundles" className="text-sm font-medium text-accent-600 hover:text-accent-500 transition-colors duration-200">
+            <Link to="/qr-bundles" className="text-sm font-medium text-purple-600 hover:text-purple-500 transition-colors duration-200">
               View all QR bundles
             </Link>
           </div>
         </div>
 
         {/* Scans Stats Card */}
-        <div className="card p-6 bg-gradient-to-br from-white to-green-50/50 border border-green-100/50">
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
           <div className="flex items-center">
-            <div className="flex-shrink-0 rounded-xl bg-gradient-to-r from-success-500 to-success-600 p-3 shadow-soft">
+            <div className="flex-shrink-0 rounded-lg bg-green-500 p-3">
               <ArrowTrendingUpIcon className="h-6 w-6 text-white" aria-hidden="true" />
             </div>
             <div className="ml-5 w-0 flex-1">
@@ -162,7 +162,7 @@ const Dashboard = () => {
               <span className="ml-1 font-medium">{stats.scans.today} today</span>
             </div>
             <div className="ml-4">
-              <Link to="/analytics" className="text-sm font-medium text-success-600 hover:text-success-500 transition-colors duration-200">
+              <Link to="/analytics" className="text-sm font-medium text-green-600 hover:text-green-500 transition-colors duration-200">
                 View analytics
               </Link>
             </div>
@@ -170,9 +170,9 @@ const Dashboard = () => {
         </div>
 
         {/* Pending Requests Card (All authenticated users) */}
-        <div className="card p-6 bg-gradient-to-br from-white to-orange-50/50 border border-orange-100/50">
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
             <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-xl bg-gradient-to-r from-warning-500 to-warning-600 p-3 shadow-soft">
+              <div className="flex-shrink-0 rounded-lg bg-orange-500 p-3">
                 <ClockIcon className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
               <div className="ml-5 w-0 flex-1">
@@ -191,7 +191,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="mt-4">
-              <Link to="/requests" className="text-sm font-medium text-warning-600 hover:text-warning-500 transition-colors duration-200">
+              <Link to="/requests" className="text-sm font-medium text-orange-600 hover:text-orange-500 transition-colors duration-200">
                 View all requests
               </Link>
             </div>
@@ -201,9 +201,9 @@ const Dashboard = () => {
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent QR Bundles */}
-        <div className="card overflow-hidden bg-gradient-to-br from-white to-slate-50/50 border border-slate-100/50">
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-5 border-b border-primary-200/50">
-            <h3 className="text-lg leading-6 font-semibold text-white">Recent QR Bundles</h3>
+        <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
+          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg leading-6 font-semibold text-gray-900">Recent QR Bundles</h3>
           </div>
           <ul className="divide-y divide-gray-100">
             {loading ? (
@@ -215,10 +215,10 @@ const Dashboard = () => {
               ))
             ) : stats.qrBundles.recent.length > 0 ? (
               stats.qrBundles.recent.map((bundle) => (
-                <li key={bundle._id} className="px-6 py-4 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-transparent transition-all duration-200">
+                <li key={bundle._id} className="px-6 py-4 hover:bg-gray-50 transition-all duration-200">
                   <Link to={`/qr-bundles/${bundle._id}`} className="flex items-center group">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-primary-700 truncate group-hover:text-primary-600 transition-colors duration-200">{bundle.title}</p>
+                      <p className="text-sm font-semibold text-blue-700 truncate group-hover:text-blue-600 transition-colors duration-200">{bundle.title}</p>
                       <p className="text-sm text-gray-500 truncate">
                         {bundle.documents?.length || 0} document(s) • Created {new Date(bundle.createdAt).toLocaleDateString()}
                       </p>
@@ -226,13 +226,13 @@ const Dashboard = () => {
                     <div className="ml-4 flex-shrink-0 flex">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-200 ${
                         bundle.accessControl?.isPublic 
-                          ? 'bg-gradient-to-r from-success-100 to-success-200 text-success-800 border border-success-300/50' 
-                          : 'bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border border-primary-300/50'
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-blue-100 text-blue-800 border border-blue-200'
                       }`}>
                         {bundle.accessControl?.isPublic ? 'Public' : 'Private'}
                       </span>
                       {bundle.accessControl?.hasPasscode && (
-                        <span className="ml-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-accent-100 to-accent-200 text-accent-800 border border-accent-300/50">
+                        <span className="ml-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
                           Passcode
                         </span>
                       )}
@@ -248,9 +248,9 @@ const Dashboard = () => {
             )}
           </ul>
           {stats.qrBundles.total > 0 && (
-            <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 px-6 py-4 border-t border-gray-100">
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
               <div className="text-sm">
-                <Link to="/qr-bundles/create" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors duration-200 inline-flex items-center">
+                <Link to="/qr-bundles/create" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors duration-200 inline-flex items-center">
                   Create new QR bundle
                   <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -262,9 +262,9 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Documents */}
-        <div className="card overflow-hidden bg-gradient-to-br from-white to-slate-50/50 border border-slate-100/50">
-          <div className="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-5 border-b border-accent-200/50">
-            <h3 className="text-lg leading-6 font-semibold text-white">Recent Documents</h3>
+        <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
+          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg leading-6 font-semibold text-gray-900">Recent Documents</h3>
           </div>
           <ul className="divide-y divide-gray-100">
             {loading ? (
@@ -276,21 +276,21 @@ const Dashboard = () => {
               ))
             ) : stats.documents.recent.length > 0 ? (
               stats.documents.recent.map((doc) => (
-                <li key={doc._id} className="px-6 py-4 hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-transparent transition-all duration-200">
+                <li key={doc._id} className="px-6 py-4 hover:bg-gray-50 transition-all duration-200">
                   <Link to={`/documents`} className="flex items-center group">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-accent-700 truncate group-hover:text-accent-600 transition-colors duration-200">{doc.originalName}</p>
+                      <p className="text-sm font-semibold text-purple-700 truncate group-hover:text-purple-600 transition-colors duration-200">{doc.originalName}</p>
                       <p className="text-sm text-gray-500 truncate">
                         {(doc.fileSize / 1024).toFixed(2)} KB • {new Date(doc.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="ml-4 flex-shrink-0">
                       {doc.bundle ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-success-100 to-success-200 text-success-800 border border-success-300/50">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
                           In QR Bundle
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border border-gray-300/50">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
                           Unbundled
                         </span>
                       )}
@@ -306,9 +306,9 @@ const Dashboard = () => {
             )}
           </ul>
           {stats.documents.total > 0 && (
-            <div className="bg-gradient-to-r from-slate-50 to-purple-50/50 px-6 py-4 border-t border-gray-100">
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
               <div className="text-sm">
-                <Link to="/documents/upload" className="font-semibold text-accent-600 hover:text-accent-500 transition-colors duration-200 inline-flex items-center">
+                <Link to="/documents/upload" className="font-semibold text-purple-600 hover:text-purple-500 transition-colors duration-200 inline-flex items-center">
                   Upload new documents
                   <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />

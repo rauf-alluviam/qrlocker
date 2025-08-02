@@ -39,7 +39,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             leaveFrom="translate-x-0"
             leaveTo="-translate-x-full"
           >
-            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-sidebar-gradient shadow-soft-2xl">
+            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-gray-800 shadow-2xl">
               <Transition.Child
                 as={Fragment}
                 enter="ease-in-out duration-300"
@@ -52,7 +52,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <div className="absolute top-0 right-0 -mr-12 pt-2">
                   <button
                     type="button"
-                    className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-colors duration-200"
+                    className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white backdrop-blur-sm bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
                     onClick={() => setSidebarOpen(false)}
                   >
                     <span className="sr-only">Close sidebar</span>
@@ -64,12 +64,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <div className="flex-shrink-0 flex items-center px-4">
                   <NavLink to="/" className="flex items-center group transition-transform duration-200 hover:scale-105">
                     <div className="relative">
-                      <svg className="h-8 w-auto text-white drop-shadow-sm" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="h-8 w-auto text-blue-400 drop-shadow-sm" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4 4H20V20H4V4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M7 7H17V17H7V7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M10 10H14V14H10V10Z" fill="currentColor" />
                       </svg>
-                      <div className="absolute inset-0 bg-white/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                      <div className="absolute inset-0 bg-blue-400/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                     </div>
                     <span className="ml-3 text-white text-xl font-bold tracking-tight drop-shadow-sm">QRLocker</span>
                   </NavLink>
@@ -129,7 +129,7 @@ const Navigation = () => {
           )}
         </NavLink>
       ))}
-      <div className="pt-6 mt-6 border-t border-primary-500/30">
+      <div className="pt-6 mt-6 border-t border-gray-700">
         <NavLink
           to="/profile"
           className={({ isActive }) =>
@@ -147,7 +147,7 @@ const Navigation = () => {
         </NavLink>
         <button
           onClick={logout}
-          className="w-full mt-2 sidebar-item sidebar-item-inactive group hover:bg-red-500/20 hover:text-red-200"
+          className="w-full mt-2 sidebar-item sidebar-item-inactive group hover:bg-red-600/20 hover:text-red-200"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

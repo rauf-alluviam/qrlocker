@@ -130,11 +130,11 @@ code {
   }
   
   .sidebar-item-active {
-    @apply sidebar-item bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-soft;
+    @apply sidebar-item bg-blue-600 text-white shadow-lg;
   }
   
   .sidebar-item-inactive {
-    @apply sidebar-item text-primary-100/80 hover:bg-primary-500/30 hover:text-white hover:shadow-soft;
+    @apply sidebar-item text-gray-300 hover:bg-gray-700 hover:text-white hover:shadow-md;
   }
   
   .nav-tab {
