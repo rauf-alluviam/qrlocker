@@ -58,7 +58,7 @@ const QRBundlesList = () => {
           <QRBundlesHeader 
             total={pagination.total || 0}
             viewMode={viewMode}
-            setViewMode={setViewMode}
+            onViewModeChange={setViewMode}
           />
           <QRBundlesSearch
             searchTerm={searchTerm}
@@ -87,7 +87,7 @@ const QRBundlesList = () => {
         <QRBundlesHeader 
           total={pagination.total || 0}
           viewMode={viewMode}
-          setViewMode={setViewMode}
+          onViewModeChange={setViewMode}
         />
 
         {/* Search Component */}

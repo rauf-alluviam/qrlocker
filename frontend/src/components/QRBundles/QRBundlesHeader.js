@@ -7,7 +7,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const QRBundlesHeader = ({ 
-  totalCount, 
+  total, 
   viewMode, 
   onViewModeChange 
 }) => {
@@ -19,7 +19,7 @@ const QRBundlesHeader = ({
             QR Bundles
           </h1>
           <p className="mt-2 text-gray-600">
-            Manage your QR bundles ({totalCount || 0} total)
+            Manage your QR bundles ({total || 0} total)
           </p>
         </div>
         <div className="flex items-center space-x-3">
